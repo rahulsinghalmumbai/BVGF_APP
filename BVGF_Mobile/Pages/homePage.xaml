@@ -424,7 +424,7 @@
 
                 <!-- Add Button -->
                 <Frame BackgroundColor="#00BCD4" 
-                       HeightRequest="56" 
+                       HeightRequest="56"    
                        WidthRequest="56" 
                        CornerRadius="28" 
                        Padding="0"
