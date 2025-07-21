@@ -4,12 +4,12 @@
              x:Class="BVGF.Pages.homePage"
              Title="homePage"
              BackgroundColor="#00BCD4"
-              Padding="0"
-             NavigationPage.HasNavigationBar="False"
-             >
+             Padding="0"
+             NavigationPage.HasNavigationBar="False">
 
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -40,13 +40,14 @@
                    TextColor="White" 
                    VerticalOptions="Center" 
                    HorizontalOptions="Center" />
-
-            
         </Grid>
 
+        
+
         <!-- Search Section -->
-        <Grid Grid.Row="1" BackgroundColor="#F5F5F5" Padding="15,10,20,15">
+        <Grid Grid.Row="2" BackgroundColor="#F5F5F5" Padding="15,10,20,15">
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -65,8 +66,28 @@
                 <Label Grid.Column="2" Text="🔽" FontSize="16" TextColor="Black" VerticalOptions="Center" />
             </Grid>
 
-            <!-- Search Fields -->
-            <Grid Grid.Row="1" Margin="0,-8,0,15">
+            <!-- First Row Search Fields: Company, Category (2 columns) -->
+            <Grid Grid.Row="1" Margin="0,-8,0,10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Entry Grid.Column="0" 
+                       Placeholder="Company" 
+                       BackgroundColor="White"
+                       Margin="0,0,5,0"
+                       HeightRequest="45" />
+
+                <Entry Grid.Column="1" 
+                       Placeholder="Category" 
+                       BackgroundColor="White" 
+                       Margin="5,0,0,0"
+                       HeightRequest="45" />
+            </Grid>
+
+            <!-- Second Row Search Fields: Name, City, Mobile (3 columns) -->
+            <Grid Grid.Row="2" Margin="0,0,0,15">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="*" />
@@ -77,7 +98,6 @@
                        Text="vivek" 
                        Placeholder="Name" 
                        BackgroundColor="White"
-                       
                        Margin="0,0,5,0"
                        HeightRequest="45" />
 
@@ -95,7 +115,7 @@
             </Grid>
 
             <!-- Action Buttons -->
-            <Grid Grid.Row="2">
+            <Grid Grid.Row="3">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="*" />
@@ -127,12 +147,13 @@
                         FontSize="15"
                         FontAttributes="Bold"
                         Margin="5,0,0,0"
+                        
                         HeightRequest="30" />
             </Grid>
         </Grid>
 
         <!-- Contact List Section -->
-        <ScrollView Grid.Row="2" BackgroundColor="White">
+        <ScrollView Grid.Row="3" BackgroundColor="White">
             <StackLayout Padding="0" Spacing="0">
 
                 <!-- Contact Item 1 -->
@@ -161,6 +182,8 @@
                         <Label Text="077079 Vivek Mathur" FontSize="16" FontAttributes="Bold" TextColor="Black" />
                         <Label Text="Bilaspur (hp)" FontSize="14" TextColor="#666" />
                         <Label Text="8108399500" FontSize="14" TextColor="#666" />
+                        <Label Text="Company: ABC Corp" FontSize="12" TextColor="#2E7D32" />
+                        <Label Text="Category: Business" FontSize="12" TextColor="#2E7D32" />
                     </StackLayout>
                 </Grid>
 
@@ -193,6 +216,8 @@
                         <Label Text="530357 Vivek Kumar" FontSize="16" FontAttributes="Bold" TextColor="Black" />
                         <Label Text="Surrey" FontSize="14" TextColor="#666" />
                         <Label Text="6725587499, 9582301320" FontSize="14" TextColor="#666" />
+                        <Label Text="Company: Tech Solutions" FontSize="12" TextColor="#2E7D32" />
+                        <Label Text="Category: IT Services" FontSize="12" TextColor="#2E7D32" />
                     </StackLayout>
                 </Grid>
 
@@ -226,6 +251,8 @@
                         <Label Text="Bharatpur" FontSize="14" TextColor="#666" />
                         <Label Text="9812878609" FontSize="14" TextColor="#666" />
                         <Label Text="Reference : group85" FontSize="12" TextColor="#888" />
+                        <Label Text="Company: Nepal Enterprises" FontSize="12" TextColor="#2E7D32" />
+                        <Label Text="Category: Trading" FontSize="12" TextColor="#2E7D32" />
                     </StackLayout>
                 </Grid>
 
@@ -258,6 +285,8 @@
                         <Label Text="562844 Vivek Adhikari" FontSize="16" FontAttributes="Bold" TextColor="Black" />
                         <Label Text="Laxmi Nagar : Delhi" FontSize="14" TextColor="#666" />
                         <Label Text="9845502387" FontSize="14" TextColor="#666" />
+                        <Label Text="Company: Delhi Ventures" FontSize="12" TextColor="#2E7D32" />
+                        <Label Text="Category: Real Estate" FontSize="12" TextColor="#2E7D32" />
                     </StackLayout>
                 </Grid>
 
@@ -289,6 +318,8 @@
                     <StackLayout Grid.Column="1" Margin="10,0,0,0" VerticalOptions="Center">
                         <Label Text="075693 Vivek Prakash Agarwal" FontSize="16" FontAttributes="Bold" TextColor="Black" />
                         <Label Text="Dubai" FontSize="14" TextColor="#666" />
+                        <Label Text="Company: UAE Holdings" FontSize="12" TextColor="#2E7D32" />
+                        <Label Text="Category: Investment" FontSize="12" TextColor="#2E7D32" />
                     </StackLayout>
                 </Grid>
 
@@ -321,6 +352,8 @@
                         <Label Text="097920 Vivek Agarwal" FontSize="16" FontAttributes="Bold" TextColor="Black" />
                         <Label Text="Trenton" FontSize="14" TextColor="#666" />
                         <Label Text="7324474864" FontSize="14" TextColor="#666" />
+                        <Label Text="Company: US Imports" FontSize="12" TextColor="#2E7D32" />
+                        <Label Text="Category: Import/Export" FontSize="12" TextColor="#2E7D32" />
                     </StackLayout>
                 </Grid>
 
@@ -353,6 +386,8 @@
                         <Label Text="125336 Vivek Sharma" FontSize="16" FontAttributes="Bold" TextColor="Black" />
                         <Label Text="Brandon" FontSize="14" TextColor="#666" />
                         <Label Text="8826170850, 9811813740, 9868126342" FontSize="14" TextColor="#666" />
+                        <Label Text="Company: Canada Inc" FontSize="12" TextColor="#2E7D32" />
+                        <Label Text="Category: Manufacturing" FontSize="12" TextColor="#2E7D32" />
                     </StackLayout>
                 </Grid>
 
@@ -385,6 +420,8 @@
                         <Label Text="501839 Vivekanand Kohli" FontSize="16" FontAttributes="Bold" TextColor="Black" />
                         <Label Text="London" FontSize="14" TextColor="#666" />
                         <Label Text="7990200215" FontSize="14" TextColor="#666" />
+                        <Label Text="Company: UK Services" FontSize="12" TextColor="#2E7D32" />
+                        <Label Text="Category: Consulting" FontSize="12" TextColor="#2E7D32" />
                     </StackLayout>
                 </Grid>
 
@@ -392,7 +429,7 @@
         </ScrollView>
 
         <!-- Floating Action Buttons -->
-        <Grid Grid.Row="2" VerticalOptions="End" HorizontalOptions="End" Margin="20,0,20,100">
+        <Grid Grid.Row="3" VerticalOptions="End" HorizontalOptions="End" Margin="20,0,20,100">
             <StackLayout Spacing="15">
                 <!-- WhatsApp Button -->
                 <Frame BackgroundColor="#25D366" 
