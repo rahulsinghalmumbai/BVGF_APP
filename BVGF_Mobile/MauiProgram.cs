@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using BVGF.Connection;
+using Microsoft.Extensions.Logging;
 
 namespace BVGF_Mobile
 {
@@ -18,7 +19,7 @@ namespace BVGF_Mobile
 #if DEBUG
     		builder.Logging.AddDebug();
 #endif
-
+            builder.Services.AddSingleton<ApiService>();
             return builder.Build();
         }
     }
