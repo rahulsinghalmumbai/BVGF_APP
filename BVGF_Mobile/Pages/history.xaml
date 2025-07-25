@@ -1,10 +1,8 @@
-<?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+<!-- history.xaml -->
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="BVGF.Pages.history"
-             Title="History"
-             BackgroundColor="#F5F5F5"
-             NavigationPage.HasNavigationBar="False">
+             x:Name="HistoryView">
 
     <Grid>
         <!-- Header -->
@@ -13,7 +11,7 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- Header Section -->
+        <!-- Header Section with Close Button -->
         <Grid Grid.Row="0" BackgroundColor="#00BCD4">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="50"/>
@@ -21,7 +19,12 @@
                 <ColumnDefinition Width="50"/>
             </Grid.ColumnDefinitions>
 
-            
+            <Button Grid.Column="0"
+                    Text="✕"
+                    FontSize="20"
+                    TextColor="White"
+                    BackgroundColor="Transparent"
+                    Clicked="OnCloseClicked"/>
 
             <Label Grid.Column="1"
                    Text="History"
@@ -158,143 +161,10 @@
                     <!-- Separator -->
                     <BoxView HeightRequest="2" BackgroundColor="#00BCD4"/>
 
-                    <!-- Sample Record 2 -->
-                    <Grid BackgroundColor="#FAFAFA" Padding="5">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="2.5*"/>
-                            <ColumnDefinition Width="2.5*"/>
-                            <ColumnDefinition Width="2*"/>
-                            <ColumnDefinition Width="1*"/>
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-
-                        <!-- Company Row -->
-                        <Label Grid.Row="0" Grid.Column="0" 
-                               Text="Marketing Hub"
-                               FontSize="12"
-                               FontAttributes="Bold"
-                               TextColor="#333"
-                               Padding="5"/>
-
-                        <Label Grid.Row="0" Grid.Column="1" 
-                               Text="Advertising"
-                               FontSize="12"
-                               FontAttributes="Bold"
-                               TextColor="#333"
-                               Padding="5"/>
-
-                        <Label Grid.Row="0" Grid.Column="2" 
-                               Text=""
-                               FontSize="12"
-                               Padding="5"/>
-
-                        <!-- Time Cell (Merged) -->
-                        <Frame Grid.Row="0" Grid.RowSpan="2" Grid.Column="3"
-                               BackgroundColor="#F9F9F9"
-                               Padding="5"
-                               HasShadow="False">
-                            <Label Text="1 month ago"
-                                   FontSize="10"
-                                   TextColor="#666"
-                                   HorizontalOptions="Center"
-                                   VerticalOptions="Center"/>
-                        </Frame>
-
-                        <!-- Person Row -->
-                        <Label Grid.Row="1" Grid.Column="0" 
-                               Text="karnal"
-                               FontSize="12"
-                               TextColor="#555"
-                               Padding="5"/>
-
-                        <Label Grid.Row="1" Grid.Column="1" 
-                               Text="Haryana"
-                               FontSize="12"
-                               TextColor="#555"
-                               Padding="5"/>
-
-                        <Label Grid.Row="1" Grid.Column="2" 
-                               Text=""
-                               FontSize="12"
-                               TextColor="#00796B"
-                               FontAttributes="Bold"
-                               Padding="5"/>
-                    </Grid>
-
-                    <!-- Separator -->
-                    <BoxView HeightRequest="2" BackgroundColor="#00BCD4"/>
-
-                    <!-- Sample Record 3 with Phone Number -->
-                    <Grid BackgroundColor="#FAFAFA" Padding="5">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="2.5*"/>
-                            <ColumnDefinition Width="2.5*"/>
-                            <ColumnDefinition Width="2*"/>
-                            <ColumnDefinition Width="1*"/>
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-
-                        <!-- Company Row -->
-                        <Label Grid.Row="0" Grid.Column="0" 
-                               Text="Telecom Services"
-                               FontSize="12"
-                               FontAttributes="Bold"
-                               TextColor="#333"
-                               Padding="5"/>
-
-                        <Label Grid.Row="0" Grid.Column="1" 
-                               Text="Communication"
-                               FontSize="12"
-                               FontAttributes="Bold"
-                               TextColor="#333"
-                               Padding="5"/>
-
-                        <Label Grid.Row="0" Grid.Column="2" 
-                               Text=""
-                               FontSize="12"
-                               Padding="5"/>
-
-                        <!-- Time Cell (Merged) -->
-                        <Frame Grid.Row="0" Grid.RowSpan="2" Grid.Column="3"
-                               BackgroundColor="#F9F9F9"
-                               Padding="5"
-                               HasShadow="False">
-                            <Label Text="3 month ago"
-                                   FontSize="10"
-                                   TextColor="#666"
-                                   HorizontalOptions="Center"
-                                   VerticalOptions="Center"/>
-                        </Frame>
-
-                        <!-- Person Row -->
-                        <Label Grid.Row="1" Grid.Column="0" 
-                               Text=""
-                               FontSize="12"
-                               TextColor="#555"
-                               Padding="5"/>
-
-                        <Label Grid.Row="1" Grid.Column="1" 
-                               Text=""
-                               FontSize="12"
-                               TextColor="#555"
-                               Padding="5"/>
-
-                        <Label Grid.Row="1" Grid.Column="2" 
-                               Text="9560548422"
-                               FontSize="12"
-                               TextColor="#00796B"
-                               FontAttributes="Bold"
-                               Padding="5"/>
-                    </Grid>
+                    <!-- More records can be added here -->
 
                 </StackLayout>
             </StackLayout>
         </ScrollView>
     </Grid>
-</ContentPage>
+</ContentView>

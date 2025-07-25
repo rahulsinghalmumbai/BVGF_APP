@@ -1,4 +1,5 @@
-﻿using Microsoft.Maui.Controls;
+﻿using BVGF.Connection;
+using Microsoft.Maui.Controls;
 using System;
 using System.Threading.Tasks;
 
@@ -7,16 +8,18 @@ namespace BVGF.Pages
     public partial class loginPage : ContentPage
     {
         private bool isPasswordVisible = false;
+        private readonly ApiService _apiService;
 
         public loginPage()
         {
             InitializeComponent();
             NavigationPage.SetHasNavigationBar(this, false);
+            _apiService = new ApiService();
         }
 
         private async void OnLoginClicked(object sender, EventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(UsernameEntry.Text) || string.IsNullOrWhiteSpace(PasswordEntry.Text))
+            if ( string.IsNullOrWhiteSpace(PasswordEntry.Text))
             {
                 await DisplayAlert("Error", "Please enter both username and password", "OK");
                 return;
@@ -29,22 +32,19 @@ namespace BVGF.Pages
 
             try
             {
-                // Simulate API call
                 await Task.Delay(2000);
 
-                // TODO: Replace with actual authentication logic
-                bool isLoginSuccessful = await AuthenticateUser(UsernameEntry.Text, PasswordEntry.Text);
+                string isLoginSuccessful = await _apiService.LoginAsync(PasswordEntry.Text.Trim());
 
-                if (isLoginSuccessful)
+                if (!string.IsNullOrEmpty(isLoginSuccessful))
                 {
-                    await DisplayAlert("Success", "Login successful!", "OK");
+                    //await DisplayAlert("Success", "Login successful!", "OK");
                     await Navigation.PushAsync(new homePage());
-                    // TODO: Navigate to main page
-                    // await Shell.Current.GoToAsync("//MainPage");
+                    
                 }
                 else
                 {
-                    await DisplayAlert("Error", "Invalid username or password", "OK");
+                    await DisplayAlert("Error", "Invalid username ", "OK");
                 }
             }
             catch (Exception ex)
@@ -53,19 +53,18 @@ namespace BVGF.Pages
             }
             finally
             {
-                // Hide loading indicator
                 LoadingIndicator.IsVisible = false;
                 LoadingIndicator.IsRunning = false;
                 LoginButton.IsEnabled = true;
             }
         }
 
-        private void OnTogglePasswordClicked(object sender, EventArgs e)
-        {
-            isPasswordVisible = !isPasswordVisible;
-            PasswordEntry.IsPassword = !isPasswordVisible;
-            TogglePasswordButton.Text = isPasswordVisible ? "🙈" : "👁️";
-        }
+        //private void OnTogglePasswordClicked(object sender, EventArgs e)
+        //{
+        //    isPasswordVisible = !isPasswordVisible;
+        //    PasswordEntry.IsPassword = !isPasswordVisible;
+        //    TogglePasswordButton.Text = isPasswordVisible ? "🙈" : "👁️";
+        //}
 
         private async void OnForgotPasswordTapped(object sender, EventArgs e)
         {
@@ -95,14 +94,14 @@ namespace BVGF.Pages
 
 
 
-        private async Task<bool> AuthenticateUser(string username, string password)
+        private async Task<bool> AuthenticateUser(string password)
         {
             // TODO: Replace with actual authentication logic
             // This is just a dummy implementation
             await Task.Delay(1000); // Simulate network delay
 
             // For demo purposes, accept any non-empty credentials
-            return !string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(password);
+            return  !string.IsNullOrWhiteSpace(password);
         }
 
         // Override back button behavior if needed

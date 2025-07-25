@@ -43,7 +43,7 @@
             <!-- Login Form Section -->
             <StackLayout Grid.Row="1" Spacing="20" Margin="0,40,0,20">
 
-                <!-- Username/Email Input -->
+                <!-- Username/Email Input --><!--
                 <Frame BackgroundColor="White" 
                        HasShadow="True" 
                        CornerRadius="10" 
@@ -59,7 +59,7 @@
                                HorizontalOptions="FillAndExpand" 
                                VerticalOptions="Center"/>
                     </StackLayout>
-                </Frame>
+                </Frame>-->
 
                 <!-- Password Input -->
                 <Frame BackgroundColor="White" 
@@ -67,22 +67,23 @@
                        CornerRadius="10" 
                        Padding="0">
                     <StackLayout Orientation="Horizontal" Padding="15,10">
-                        <Label Text="🔒" 
+                        <Label Text="👤" 
                                FontSize="18" 
                                VerticalOptions="Center" 
                                Margin="0,0,10,0"/>
                         <Entry x:Name="PasswordEntry" 
-                               Placeholder="Password" 
-                               IsPassword="True" 
+                               Placeholder="Usermobile Number" 
+                              
                                FontSize="16" 
+                               MaxLength="10"
                                HorizontalOptions="FillAndExpand" 
                                VerticalOptions="Center"/>
-                        <Button x:Name="TogglePasswordButton" 
+                        <!--<Button x:Name="TogglePasswordButton" 
                                 Text="👁️" 
                                 BackgroundColor="Transparent" 
                                 FontSize="16" 
                                 WidthRequest="40" 
-                                Clicked="OnTogglePasswordClicked"/>
+                                Clicked="OnTogglePasswordClicked"/>-->
                     </StackLayout>
                 </Frame>
 
