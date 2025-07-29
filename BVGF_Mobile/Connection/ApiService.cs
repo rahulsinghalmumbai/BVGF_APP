@@ -22,10 +22,10 @@ namespace BVGF.Connection
         {
             try
             {
-               var url = $"{Endpoints.Login}?MobileNo={usermobile}";
+                var url = $"{Endpoints.Login}?MobileNo={usermobile}";
                 var response = await _httpClient.GetAsync(url);
-                
-                 if(response.IsSuccessStatusCode)
+
+                if (response.IsSuccessStatusCode)
                 {
                     string responseBody = await response.Content.ReadAsStringAsync();
                     return response.IsSuccessStatusCode ? responseBody : null;
@@ -34,7 +34,7 @@ namespace BVGF.Connection
                 {
                     return null;
                 }
-                
+
             }
             catch (Exception ex)
             {
@@ -77,11 +77,11 @@ namespace BVGF.Connection
                 var result = JsonSerializer.Deserialize<ApiResponse<MemberResponseData>>(responseBody, new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
-                });   
+                });
 
                 return result?.Data?.Members ?? new List<MstMember>();
 
-               
+
             }
             catch (Exception ex)
             {

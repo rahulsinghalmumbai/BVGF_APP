@@ -43,7 +43,8 @@
             <!-- Login Form Section -->
             <StackLayout Grid.Row="1" Spacing="20" Margin="0,40,0,20">
 
-                <!-- Username/Email Input --><!--
+                <!-- Username/Email Input -->
+                <!--
                 <Frame BackgroundColor="White" 
                        HasShadow="True" 
                        CornerRadius="10" 
@@ -126,7 +127,7 @@
                                    Color="#4A90E2" 
                                    HorizontalOptions="Center"/>
 
-               
+
 
             </StackLayout>
 

@@ -19,7 +19,7 @@ namespace BVGF.Pages
 
         private async void OnLoginClicked(object sender, EventArgs e)
         {
-            if ( string.IsNullOrWhiteSpace(PasswordEntry.Text))
+            if (string.IsNullOrWhiteSpace(PasswordEntry.Text))
             {
                 await DisplayAlert("Error", "Please enter both username and password", "OK");
                 return;
@@ -32,15 +32,14 @@ namespace BVGF.Pages
 
             try
             {
-                await Task.Delay(2000);
+                //await Task.Delay(2000);
 
                 string isLoginSuccessful = await _apiService.LoginAsync(PasswordEntry.Text.Trim());
 
                 if (!string.IsNullOrEmpty(isLoginSuccessful))
                 {
-                    //await DisplayAlert("Success", "Login successful!", "OK");
                     await Navigation.PushAsync(new homePage());
-                    
+
                 }
                 else
                 {
@@ -59,12 +58,7 @@ namespace BVGF.Pages
             }
         }
 
-        //private void OnTogglePasswordClicked(object sender, EventArgs e)
-        //{
-        //    isPasswordVisible = !isPasswordVisible;
-        //    PasswordEntry.IsPassword = !isPasswordVisible;
-        //    TogglePasswordButton.Text = isPasswordVisible ? "🙈" : "👁️";
-        //}
+
 
         private async void OnForgotPasswordTapped(object sender, EventArgs e)
         {
@@ -101,7 +95,7 @@ namespace BVGF.Pages
             await Task.Delay(1000); // Simulate network delay
 
             // For demo purposes, accept any non-empty credentials
-            return  !string.IsNullOrWhiteSpace(password);
+            return !string.IsNullOrWhiteSpace(password);
         }
 
         // Override back button behavior if needed
