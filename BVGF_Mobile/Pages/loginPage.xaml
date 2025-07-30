@@ -23,7 +23,7 @@
                            FontSize="50" 
                            HorizontalOptions="Center" 
                            VerticalOptions="Center"/>-->
-                    <Image Source="logo.jpeg" 
+                    <Image Source="Images/logo.jpeg" 
                            HorizontalOptions="Center" 
                            VerticalOptions="Center"
                            Aspect="AspectFit"/>
@@ -43,24 +43,6 @@
             <!-- Login Form Section -->
             <StackLayout Grid.Row="1" Spacing="20" Margin="0,40,0,20">
 
-                <!-- Username/Email Input -->
-                <!--
-                <Frame BackgroundColor="White" 
-                       HasShadow="True" 
-                       CornerRadius="10" 
-                       Padding="0">
-                    <StackLayout Orientation="Horizontal" Padding="15,10">
-                        <Label Text="👤" 
-                               FontSize="18" 
-                               VerticalOptions="Center" 
-                               Margin="0,0,10,0"/>
-                        <Entry x:Name="UsernameEntry" 
-                               Placeholder="Username or Email" 
-                               FontSize="16" 
-                               HorizontalOptions="FillAndExpand" 
-                               VerticalOptions="Center"/>
-                    </StackLayout>
-                </Frame>-->
 
                 <!-- Password Input -->
                 <Frame BackgroundColor="White" 
@@ -73,18 +55,13 @@
                                VerticalOptions="Center" 
                                Margin="0,0,10,0"/>
                         <Entry x:Name="PasswordEntry" 
-                               Placeholder="Usermobile Number" 
-                              
+                               Placeholder="User mobile Number" 
+                               TextColor="Black"
+                               PlaceholderColor="#666"
                                FontSize="16" 
                                MaxLength="10"
                                HorizontalOptions="FillAndExpand" 
                                VerticalOptions="Center"/>
-                        <!--<Button x:Name="TogglePasswordButton" 
-                                Text="👁️" 
-                                BackgroundColor="Transparent" 
-                                FontSize="16" 
-                                WidthRequest="40" 
-                                Clicked="OnTogglePasswordClicked"/>-->
                     </StackLayout>
                 </Frame>
 

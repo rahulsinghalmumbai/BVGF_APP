@@ -22,6 +22,7 @@ namespace BVGF.Connection
         {
             try
             {
+               // var url = $"http://195.250.31.98:2030/api/MstMember/login?MobileNo=9559828827";
                 var url = $"{Endpoints.Login}?MobileNo={usermobile}";
                 var response = await _httpClient.GetAsync(url);
 
@@ -44,28 +45,30 @@ namespace BVGF.Connection
         }
 
         public async Task<List<MstMember>> GetMembersAsync(
-        string company, string category, string name, string city, string mobile)
+     string company, long? category, string name, string city, string mobile)
         {
-            // Build query string with parameters
-            var queryParams = new Dictionary<string, string>
-        {
-            { "Company", company },
-            { "Category", category },
-            { "Name", name },
-            { "City", city },
-            { "Mobile", mobile }
-        };
+            var queryParams = new Dictionary<string, string>();
+
+            if (!string.IsNullOrWhiteSpace(company))
+                queryParams.Add("Company", company);
+
+            if (category.HasValue && category.Value > 0)
+                queryParams.Add("CatName", category.Value.ToString());
+
+            if (!string.IsNullOrWhiteSpace(name))
+                queryParams.Add("Name", name);
+
+            if (!string.IsNullOrWhiteSpace(city))
+                queryParams.Add("City", city);
+
+            if (!string.IsNullOrWhiteSpace(mobile))
+                queryParams.Add("Mobile", mobile);
 
             var queryString = string.Join("&",
-                queryParams
-                    .Where(kv => !string.IsNullOrWhiteSpace(kv.Value)) // Skip empty
-                    .Select(kv => $"{kv.Key}={Uri.EscapeDataString(kv.Value)}"));
-
-            //var url = $"http://172.18.144.1:5151/api/MstMember/search?{queryString}";
-
-
+                queryParams.Select(kv => $"{kv.Key}={Uri.EscapeDataString(kv.Value)}"));
 
             var url = $"{Endpoints.SearchMember}?{queryString}";
+
             try
             {
                 var response = await _httpClient.GetAsync(url);
@@ -80,8 +83,6 @@ namespace BVGF.Connection
                 });
 
                 return result?.Data?.Members ?? new List<MstMember>();
-
-
             }
             catch (Exception ex)
             {

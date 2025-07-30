@@ -12,6 +12,7 @@ public partial class homePage : ContentPage
 
     public ObservableCollection<MstMember> Members => _members;
 
+
     public homePage()
     {
         InitializeComponent();
@@ -52,7 +53,8 @@ public partial class homePage : ContentPage
             ShowLoading(true, "Searching members...");
 
             var company = CompanyEntry.Text?.Trim();
-            var category = CategoryPicker.SelectedItem?.ToString();
+            var selectedCategory = CategoryPicker.SelectedItem as mstCategary;
+            long? categoryId = selectedCategory?.CategoryID;
             var name = NameEntry.Text?.Trim();
             var city = CityEntry.Text?.Trim();
             var mobile = MobileEntry.Text?.Trim();
@@ -60,7 +62,7 @@ public partial class homePage : ContentPage
             // Add small delay for better UX (optional)
             await Task.Delay(300);
 
-            var members = await _apiService.GetMembersAsync(company, category, name, city, mobile);
+            var members = await _apiService.GetMembersAsync(company, categoryId, name, city, mobile);
 
             _members.Clear();
             foreach (var m in members)
@@ -133,7 +135,7 @@ public partial class homePage : ContentPage
         // Contact detail view ?? show ????
         memberCollectionView.IsVisible = false;
         SearchSection.IsVisible = false;
-        FloatingButtons.IsVisible = false;
+        //FloatingButtons.IsVisible = false;
         ContactDetailView.IsVisible = true;
         BackButton.IsVisible = true;
 
@@ -149,11 +151,8 @@ public partial class homePage : ContentPage
         BackButton.IsVisible = false;
         memberCollectionView.IsVisible = true;
         SearchSection.IsVisible = true;
-        FloatingButtons.IsVisible = true;
+        //FloatingButtons.IsVisible = true;
     }
-
-
-
     private async void OnCallTapped(object sender, EventArgs e)
     {
         try
@@ -221,7 +220,6 @@ public partial class homePage : ContentPage
             await DisplayAlert("Error", $"Could not initiate call: {ex.Message}", "OK");
         }
     }
-
     private string FormatPhoneNumber(string rawNumber)
     {
         if (string.IsNullOrWhiteSpace(rawNumber))
@@ -233,13 +231,11 @@ public partial class homePage : ContentPage
             .ToArray());
 
         //// Ensure minimum length (adjust according to your requirements)
-        //if (digits.Length < 10)
-        //    return string.Empty;
+        if (digits.Length < 10)
+            return string.Empty;
 
         return digits;
     }
-
-
     private async void OnWhatsAppTapped(object sender, EventArgs e)
     {
         try
@@ -283,7 +279,6 @@ public partial class homePage : ContentPage
             }
         }
     }
-
     private string FormatPhoneNumberForWhatsApp(string rawNumber)
     {
         if (string.IsNullOrWhiteSpace(rawNumber))
@@ -534,7 +529,6 @@ public partial class homePage : ContentPage
         var formattedNumber = FormatPhoneNumberForWhatsApp(phoneNumber);
         await OpenWhatsAppViaLauncher(contact, formattedNumber);
     }
-
     private async void OnSMSTapped(object sender, EventArgs e)
     {
         try
@@ -620,7 +614,6 @@ public partial class homePage : ContentPage
 
         return message;
     }
-
     private async Task OpenSMSViaLauncher(MstMember contact, string phoneNumber)
     {
         try
@@ -671,7 +664,6 @@ public partial class homePage : ContentPage
             await TryAlternativeSMS(contact, phoneNumber);
         }
     }
-
     // Alternative SMS method
     private async Task TryAlternativeSMS(MstMember contact, string phoneNumber)
     {
@@ -695,7 +687,6 @@ public partial class homePage : ContentPage
             await DisplayAlert("Info", "Contact details copied to clipboard", "OK");
         }
     }
-
     private string GenerateShortSMSBody(MstMember contact)
     {
         var message = $"Contact: {contact.Name}\n";
@@ -711,7 +702,6 @@ public partial class homePage : ContentPage
 
         return message;
     }
-
     // Optional: Method to send SMS to multiple numbers if contact has Mobile2
     private async void OnSMSWithOptionsClicked(object sender, EventArgs e)
     {
@@ -777,7 +767,6 @@ public partial class homePage : ContentPage
             await OpenSMSViaLauncher(contact, formattedNumber);
         }
     }
-
     private async void OnEmailTapped(object sender, EventArgs e)
     {
         try
@@ -820,7 +809,6 @@ public partial class homePage : ContentPage
             await DisplayAlert("Error", $"Could not send email: {ex.Message}", "OK");
         }
     }
-
     private string GenerateEmailBody(MstMember contact)
     {
         return $@"Contact Details:
@@ -834,7 +822,6 @@ City: {contact.City}
 
 Sent from BT Address Book App";
     }
-
     private async Task OpenEmailViaLauncher(MstMember contact)
     {
         try
@@ -856,28 +843,10 @@ Sent from BT Address Book App";
                 "Contact details copied to clipboard", "OK");
         }
     }
-
-    private void OnShareTapped(object sender, EventArgs e)
-    {
-        // Share functionality implement ????
-        var contact = ContactDetailView.BindingContext;
-        // Share logic here
-    }
-
     private void OnEditContactClicked(object sender, EventArgs e)
     {
         // Edit contact functionality
         var contact = ContactDetailView.BindingContext;
         // Navigate to edit page
     }
-
-    private void OnDeleteContactClicked(object sender, EventArgs e)
-    {
-        // Delete contact functionality
-        var contact = ContactDetailView.BindingContext;
-        // Show confirmation dialog and delete
-    }
-
-
-
 }

@@ -7,7 +7,7 @@ namespace BVGF.Pages
 {
     public partial class loginPage : ContentPage
     {
-        private bool isPasswordVisible = false;
+       
         private readonly ApiService _apiService;
 
         public loginPage()
