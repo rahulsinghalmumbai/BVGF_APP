@@ -4,17 +4,17 @@
              x:Class="BVGF.Pages.loginPage"
              Title="Login"
              BackgroundColor="#F5F5F5"
-             NavigationPage.HasNavigationBar="False"
-             >
+             NavigationPage.HasNavigationBar="False">
 
     <ScrollView>
         <Grid RowDefinitions="*,Auto,*" Padding="40,20">
 
             <!-- Logo/Header Section -->
             <StackLayout Grid.Row="0" VerticalOptions="End" HorizontalOptions="Center">
+                <!-- Fixed Frame with reduced CornerRadius -->
                 <Frame BackgroundColor="White" 
                        HasShadow="True" 
-                       CornerRadius="50" 
+                       CornerRadius="10" 
                        WidthRequest="100" 
                        HeightRequest="100"
                        HorizontalOptions="Center"
@@ -23,17 +23,19 @@
                            FontSize="50" 
                            HorizontalOptions="Center" 
                            VerticalOptions="Center"/>-->
-                    <Image Source="Images/logo.jpeg" 
+                    <Image Source="logo.jpeg" 
                            HorizontalOptions="Center" 
                            VerticalOptions="Center"
                            Aspect="AspectFit"/>
                 </Frame>
+
                 <Label Text="Welcome Back!" 
                        FontSize="28" 
                        FontAttributes="Bold" 
                        TextColor="#333333" 
                        HorizontalOptions="Center" 
                        Margin="0,20,0,10"/>
+
                 <Label Text="Sign in to your account" 
                        FontSize="16" 
                        TextColor="#666666" 
@@ -55,9 +57,8 @@
                                VerticalOptions="Center" 
                                Margin="0,0,10,0"/>
                         <Entry x:Name="PasswordEntry" 
-                               Placeholder="User mobile Number" 
-                               TextColor="Black"
-                               PlaceholderColor="#666"
+                               Placeholder="Usermobile Number" 
+                              
                                FontSize="16" 
                                MaxLength="10"
                                HorizontalOptions="FillAndExpand" 
@@ -103,8 +104,6 @@
                                    IsRunning="False" 
                                    Color="#4A90E2" 
                                    HorizontalOptions="Center"/>
-
-
 
             </StackLayout>
 
