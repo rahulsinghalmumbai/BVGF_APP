@@ -19,6 +19,7 @@ namespace BVGF_Mobile
 #if DEBUG
     		builder.Logging.AddDebug();
 #endif
+            builder.Services.AddSingleton<HttpClient >();
             builder.Services.AddSingleton<ApiService>();
             return builder.Build();
         }
