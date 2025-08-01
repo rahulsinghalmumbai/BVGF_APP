@@ -1,20 +1,22 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Microsoft.Maui.Controls;
 
 namespace BVGF.Pages
 {
-    public partial class history : ContentView
+    public partial class history : ContentPage
     {
         public event EventHandler CloseRequested;
 
         public history()
         {
             InitializeComponent();
+            NavigationPage.SetHasNavigationBar(this, false);
         }
 
-        private void OnCloseClicked(object sender, EventArgs e)
+        private async void OnBackClicked(object sender, EventArgs e)
         {
-            CloseRequested?.Invoke(this, EventArgs.Empty);
+            await Navigation.PopAsync();
         }
 
         // Add methods to load/manage history data

@@ -62,7 +62,7 @@ namespace BVGF.Connection
                 queryParams.Add("City", city);
 
             if (!string.IsNullOrWhiteSpace(mobile))
-                queryParams.Add("Mobile", mobile);
+                queryParams.Add("Mobile1", mobile);
 
             var queryString = string.Join("&",
                 queryParams.Select(kv => $"{kv.Key}={Uri.EscapeDataString(kv.Value)}"));
@@ -114,6 +114,48 @@ namespace BVGF.Connection
             {
                 Console.WriteLine("Category API error: " + ex.Message);
                 return new List<mstCategary>();
+            }
+        }
+
+        public async Task<ApiResponse<int>> UpsertMemberAsync(MstMember member)
+        {
+            try
+            {
+                var url = Endpoints.EditMember;
+                var json = JsonSerializer.Serialize(member);
+                using var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PostAsync(url, content);
+                var responseBody = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return new ApiResponse<int>
+                    {
+                        Status = "Failed",
+                        Message = $"API request failed with status: {response.StatusCode}",
+                        Data = 0
+                    };
+                }else
+                {
+                    return new ApiResponse<int>
+                    {
+                        Status = "200",
+                        Message = "Member updated successfully",
+                        Data = 1
+                    };
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"UpsertMemberAsync Exception: {ex.Message}");
+                return new ApiResponse<int>
+                {
+                    Status = "Failed",
+                    Message = ex.Message,
+                    Data = 0
+                };
             }
         }
 

@@ -14,15 +14,11 @@
                 <!-- Fixed Frame with reduced CornerRadius -->
                 <Frame BackgroundColor="White" 
                        HasShadow="True" 
-                       CornerRadius="10" 
-                       WidthRequest="100" 
-                       HeightRequest="100"
+                       CornerRadius="50" 
+                       WidthRequest="85" 
+                       HeightRequest="85"
                        HorizontalOptions="Center"
                        Padding="0">
-                    <!--<Label Text="📱" 
-                           FontSize="50" 
-                           HorizontalOptions="Center" 
-                           VerticalOptions="Center"/>-->
                     <Image Source="logo.jpeg" 
                            HorizontalOptions="Center" 
                            VerticalOptions="Center"
@@ -45,26 +41,36 @@
             <!-- Login Form Section -->
             <StackLayout Grid.Row="1" Spacing="20" Margin="0,40,0,20">
 
-
-                <!-- Password Input -->
+                <!-- Mobile Number Input -->
                 <Frame BackgroundColor="White" 
                        HasShadow="True" 
                        CornerRadius="10" 
                        Padding="0">
                     <StackLayout Orientation="Horizontal" Padding="15,10">
-                        <Label Text="👤" 
+                        <Label Text="📱" 
                                FontSize="18" 
                                VerticalOptions="Center" 
                                Margin="0,0,10,0"/>
                         <Entry x:Name="PasswordEntry" 
-                               Placeholder="Usermobile Number" 
-                              
+                               Placeholder="Enter your mobile number" 
+                               Keyboard="Numeric"
                                FontSize="16" 
                                MaxLength="10"
                                HorizontalOptions="FillAndExpand" 
                                VerticalOptions="Center"/>
                     </StackLayout>
                 </Frame>
+
+                <!-- Show My Numbers Button -->
+                <Button Text="📋 Show My SIM Numbers" 
+                        BackgroundColor="Transparent" 
+                        TextColor="#4A90E2" 
+                        FontSize="14" 
+                        BorderColor="#4A90E2"
+                        BorderWidth="1"
+                        CornerRadius="8" 
+                        HeightRequest="40" 
+                        Clicked="OnShowMyNumbersClicked"/>
 
                 <!-- Remember Me & Forgot Password -->
                 <StackLayout Orientation="Horizontal" Margin="5,0">
@@ -104,6 +110,14 @@
                                    IsRunning="False" 
                                    Color="#4A90E2" 
                                    HorizontalOptions="Center"/>
+
+                <!-- Security Note -->
+                <Label Text="🔒 For security, we verify your number with your device SIM" 
+                       FontSize="12" 
+                       TextColor="#999999" 
+                       HorizontalOptions="Center" 
+                       HorizontalTextAlignment="Center" 
+                       Margin="0,10,0,0"/>
 
             </StackLayout>
 

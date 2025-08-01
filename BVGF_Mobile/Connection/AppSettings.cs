@@ -21,7 +21,7 @@ namespace BVGF.Connection
         public const string Login = "MstMember/login";
         public const string SearchMember = "MstMember";
         public const string CategaryDrp = "MstCategary/DropDown";
-
+        public const string EditMember = "MstMember/UpsertMember";
 
     }
 }
