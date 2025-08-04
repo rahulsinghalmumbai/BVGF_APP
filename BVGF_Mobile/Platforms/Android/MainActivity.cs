@@ -16,12 +16,12 @@ namespace BVGF_Mobile
                                    | ConfigChanges.Density)]
     public class MainActivity : MauiAppCompatActivity
     {
-        // 👇 This method must be added
+     
         public override void OnRequestPermissionsResult(int requestCode, string[] permissions, Permission[] grantResults)
         {
             base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
 
-            // 🔐 Let MAUI handle the permission result
+            
             Microsoft.Maui.ApplicationModel.Platform.OnRequestPermissionsResult(requestCode, permissions, grantResults);
         }
     }

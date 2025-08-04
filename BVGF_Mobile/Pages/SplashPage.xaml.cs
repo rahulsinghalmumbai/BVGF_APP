@@ -13,7 +13,7 @@ public partial class SplashPage : ContentPage
 
     private async void StartTimer()
     {   
-        await Task.Delay(3000);
+        await Task.Delay(2000);
         //Application.Current.MainPage = new AppShell(); 
         await Navigation.PushAsync(new loginPage());
        //await Navigation.PushAsync(new homePage());

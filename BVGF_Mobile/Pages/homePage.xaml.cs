@@ -2,9 +2,9 @@
 using BVGF.Model;
 
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 
 namespace BVGF.Pages;
-
 public partial class homePage : ContentPage
 {
     private ObservableCollection<MstMember> _members = new ObservableCollection<MstMember>();
@@ -12,8 +12,6 @@ public partial class homePage : ContentPage
     private ObservableCollection<mstCategary> _categories = new ObservableCollection<mstCategary>();
     private Object currentEditingContact;
     public ObservableCollection<MstMember> Members => _members;
-
-
     public homePage()
     {
         InitializeComponent();
@@ -26,7 +24,6 @@ public partial class homePage : ContentPage
         RecordCountLabel.Text = "Record : 0";
         _members.Clear();
     }
-
     private void ShowLoading(bool show, string message = "Searching...")
     {
         LoadingOverlay.IsVisible = show;
@@ -126,24 +123,36 @@ public partial class homePage : ContentPage
         CategoryPicker.ItemsSource = _categories;
         EditCategoryPicker.ItemsSource = _categories;
     }
-
-    private void OnContactTapped(object sender, EventArgs e)
+    private async void OnContactTapped(object sender, EventArgs e)
     {
         var grid = sender as Grid;
-        var contact = grid?.BindingContext; 
+        var contact = grid?.BindingContext as MstMember; 
 
-        // Contact detail view ?? show ????
+        if (contact == null)
+            return;
+
         memberCollectionView.IsVisible = false;
         SearchSection.IsVisible = false;
-        //FloatingButtons.IsVisible = false;
         ContactDetailView.IsVisible = true;
         BackButton.IsVisible = true;
-
-        // Contact detail view ?? selected contact data ?? bind ????
         ContactDetailView.BindingContext = contact;
+        await CheckAndShowEditButtonAsync(contact.Mobile1);
     }
 
-  
+    private async Task CheckAndShowEditButtonAsync(string selectedMobile)
+    {
+        try
+        {
+            string storedMobile = await SecureStorage.GetAsync("logged_in_mobile");
+
+            EditContactButton.IsVisible = (storedMobile == selectedMobile);
+        }
+        catch
+        {
+            EditContactButton.IsVisible = false;
+        }
+    }
+
     private void OnBackClicked(object sender, EventArgs e)
     {
         // List view ?? show ????
@@ -171,7 +180,6 @@ public partial class homePage : ContentPage
                 return;
             }
 
-            // 2. Format the phone number
             var phoneNumber = FormatPhoneNumber(contact.Mobile1);
             if (string.IsNullOrWhiteSpace(phoneNumber))
             {
@@ -179,7 +187,6 @@ public partial class homePage : ContentPage
                 return;
             }
 
-            // 3. Android-specific permission handling
             if (DeviceInfo.Platform == DevicePlatform.Android)
             {
                 // Check and request CALL_PHONE permission
@@ -196,7 +203,6 @@ public partial class homePage : ContentPage
                 }
             }
 
-            // 4. Alternative approach using Launcher if PhoneDialer fails
             try
             {
                 if (PhoneDialer.Default.IsSupported)
@@ -205,7 +211,6 @@ public partial class homePage : ContentPage
                 }
                 else
                 {
-                    // Fallback to tel: URL scheme
                     await Launcher.OpenAsync($"tel:{phoneNumber}");
                 }
             }
@@ -306,8 +311,6 @@ public partial class homePage : ContentPage
 
         return digits;
     }
-
-   
     private string GenerateWhatsAppMessage(MstMember contact)
     {
         var message = $"*Contact Details*\n\n";
@@ -330,8 +333,6 @@ public partial class homePage : ContentPage
 
         return message;
     }
-
-   
     private string GenerateShortWhatsAppMessage(MstMember contact)
     {
         var message = $"*{contact.Name}*\n";
@@ -347,8 +348,6 @@ public partial class homePage : ContentPage
 
         return message;
     }
-
-  
     private async Task OpenWhatsAppViaLauncher(MstMember contact, string phoneNumber)
     {
         try
@@ -470,8 +469,6 @@ public partial class homePage : ContentPage
                 "WhatsApp not installed. Contact details copied to clipboard.", "OK");
         }
     }
-
-   
     private async void OnWhatsAppWithOptionsClicked(object sender, EventArgs e)
     {
         try
@@ -845,7 +842,6 @@ public partial class homePage : ContentPage
         }
     }
 
-
 private void OnEditContactClicked(object sender, EventArgs e)
 {
         if (ContactDetailView.BindingContext is MstMember contact)
@@ -854,6 +850,13 @@ private void OnEditContactClicked(object sender, EventArgs e)
             PopulateEditForm(contact);
             ShowEditPopup();
         }
+}
+    private void ShowEditPopup()
+{
+    EditContactOverlay.IsVisible = true;
+
+    // Optional: Add fade-in animation
+    EditContactOverlay.FadeTo(1, 250);
 }
     private void PopulateEditForm(MstMember contact)
     {
@@ -871,19 +874,14 @@ private void OnEditContactClicked(object sender, EventArgs e)
             EditEmail2Entry.Text = contact.Email2 ?? string.Empty;
             EditEmail3Entry.Text = contact.Email3 ?? string.Empty;
 
-            // Address Information - Combine City and Address
-            //EditCityEntry.Text = contact.City ?? string.Empty;
-            EditAddressEditor.Text = string.IsNullOrEmpty(contact.Address)
-                ? contact.City ?? string.Empty
-                : $"{contact.City}, {contact.Address}";
+            // Address Information - Separate fields
+            EditCityEntry.Text = contact.City ?? string.Empty;
+            EditAddressEditor.Text = contact.Address ?? string.Empty;
 
-            // Company Information - Combine Company, CompCity and CompAddress
-            EditCompanyEntry.Text = string.IsNullOrEmpty(contact.CompAddress)
-                ? contact.CompCity ?? string.Empty
-                : $"{contact.CompCity}, {contact.CompAddress}";
-            //EditCompanyAddressEditor.Text = string.IsNullOrEmpty(contact.CompAddress)
-            //    ? contact.CompCity ?? string.Empty
-            //    : $"{contact.CompCity}, {contact.CompAddress}";
+            // Company Information - Separate fields
+            EditCompanyEntry.Text = contact.Company ?? string.Empty;
+            EditCompanyCityEntry.Text = contact.CompCity ?? string.Empty;
+            EditCompanyAddressEditor.Text = contact.CompAddress ?? string.Empty;
 
             // Category
             if (!string.IsNullOrEmpty(contact.CategoryName))
@@ -896,8 +894,6 @@ private void OnEditContactClicked(object sender, EventArgs e)
             {
                 EditCategoryPicker.SelectedItem = null;
             }
-
-           
         }
         catch (Exception ex)
         {
@@ -921,6 +917,7 @@ private void OnEditContactClicked(object sender, EventArgs e)
                 await DisplayAlert("Validation Error", "Name is required.", "OK");
                 return;
             }
+
             // Show loading indicator
             LoadingOverlay.IsVisible = true;
             LoadingIndicator.IsVisible = true;
@@ -929,17 +926,7 @@ private void OnEditContactClicked(object sender, EventArgs e)
             LoadingText.TextColor = Colors.Black;
             LoadingText.Text = "Updating contact...";
 
-            // Split address and city
-            var addressParts = EditAddressEditor.Text?.Split(new[] { ',' }, 2, StringSplitOptions.RemoveEmptyEntries)
-                                .Select(part => part.Trim())
-                                .ToArray();
-
-            // Split company address and city
-            var companyAddressParts = EditCompanyEntry.Text?.Split(new[] { ',' }, 3, StringSplitOptions.RemoveEmptyEntries)
-                                 .Select(p => p.Trim())
-                                 .ToArray();
-
-            // Create or update the member object
+            // Create or update the member object with separate fields
             var member = new MstMember
             {
                 // Preserve original ID
@@ -947,8 +934,8 @@ private void OnEditContactClicked(object sender, EventArgs e)
 
                 // Update fields from form
                 Name = EditNameEntry.Text.Trim(),
-                Address = addressParts?.Length > 1 ? addressParts[1] : null,
-                City = addressParts?.Length > 0 ? addressParts[0] : null,
+                City = string.IsNullOrWhiteSpace(EditCityEntry.Text) ? null : EditCityEntry.Text.Trim(),
+                Address = string.IsNullOrWhiteSpace(EditAddressEditor.Text) ? null : EditAddressEditor.Text.Trim(),
                 Mobile1 = EditMobile1Entry.Text.Trim(),
                 Mobile2 = string.IsNullOrWhiteSpace(EditMobile2Entry.Text) ? null : EditMobile2Entry.Text.Trim(),
                 Mobile3 = string.IsNullOrWhiteSpace(EditMobile3Entry.Text) ? null : EditMobile3Entry.Text.Trim(),
@@ -956,18 +943,14 @@ private void OnEditContactClicked(object sender, EventArgs e)
                 Email1 = EditEmail1Entry.Text.Trim(),
                 Email2 = string.IsNullOrWhiteSpace(EditEmail2Entry.Text) ? null : EditEmail2Entry.Text.Trim(),
                 Email3 = string.IsNullOrWhiteSpace(EditEmail3Entry.Text) ? null : EditEmail3Entry.Text.Trim(),
-                Company = companyAddressParts?.Length > 0 ? companyAddressParts[0] : null,
-                CompAddress = companyAddressParts?.Length > 1 ? companyAddressParts[1] : null,
-                CompCity = companyAddressParts?.Length > 2 ? companyAddressParts[2] : null,
+                Company = string.IsNullOrWhiteSpace(EditCompanyEntry.Text) ? null : EditCompanyEntry.Text.Trim(),
+                CompCity = string.IsNullOrWhiteSpace(EditCompanyCityEntry.Text) ? null : EditCompanyCityEntry.Text.Trim(),
+                CompAddress = string.IsNullOrWhiteSpace(EditCompanyAddressEditor.Text) ? null : EditCompanyAddressEditor.Text.Trim(),
                 CategoryName = (EditCategoryPicker.SelectedItem as mstCategary)?.CategoryName,
 
                 // Preserve original values
-                //Status = originalContact.Status,
-                //CreatedBy = originalContact.CreatedBy,
-                //CreatedDt = originalContact.CreatedDt,
                 DOB = originalContact.DOB,
-
-                UpdatedBy = 1, 
+                UpdatedBy = 1,
                 UpdatedDt = DateTime.Now
             };
 
@@ -1010,17 +993,7 @@ private void OnEditContactClicked(object sender, EventArgs e)
             await DisplayAlert("Error", "Failed to update contact: " + ex.Message, "OK");
         }
     }
-    // Method to show edit popup
-    private void ShowEditPopup()
-{
-    EditContactOverlay.IsVisible = true;
-
-    // Optional: Add fade-in animation
-    EditContactOverlay.FadeTo(1, 250);
-}
-
-// Method to hide edit popup
-private void HideEditPopup()
+    private void HideEditPopup()
 {
     EditContactOverlay.FadeTo(0, 250).ContinueWith(t =>
     {
@@ -1030,20 +1003,14 @@ private void HideEditPopup()
         });
     });
 }
-
-// Method to handle close popup button
 private void OnCloseEditPopupClicked(object sender, EventArgs e)
 {
     HideEditPopup();
 }
-
-// Method to handle cancel edit button
 private void OnCancelEditClicked(object sender, EventArgs e)
 {
     HideEditPopup();
 }
-
-// Optional: Handle back button to close popup if it's open
 protected override bool OnBackButtonPressed()
 {
     if (EditContactOverlay.IsVisible)
