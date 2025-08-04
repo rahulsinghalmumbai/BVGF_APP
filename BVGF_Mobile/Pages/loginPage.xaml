@@ -2,10 +2,12 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="BVGF.Pages.loginPage"
+             xmlns:custom="clr-namespace:BVGF.CustomControls"
              Title="Login"
              BackgroundColor="#F5F5F5"
              NavigationPage.HasNavigationBar="False">
 
+    <Grid>
     <ScrollView>
         <Grid RowDefinitions="*,Auto,*" Padding="40,20">
 
@@ -47,14 +49,15 @@
                        CornerRadius="10" 
                        Padding="0">
                     <StackLayout Orientation="Horizontal" Padding="15,10">
-                        <Label Text="📱" 
-                               FontSize="18" 
+                        <Label Text="👤"  
+                               FontSize="23" 
                                VerticalOptions="Center" 
-                               Margin="0,0,10,0"/>
+                               Margin="0,1,0,0"/>
                         <Entry x:Name="PasswordEntry" 
                                Placeholder="Enter your mobile number" 
                                Keyboard="Numeric"
                                FontSize="16" 
+                               TextColor="Black"
                                MaxLength="10"
                                HorizontalOptions="FillAndExpand" 
                                VerticalOptions="Center"/>
@@ -62,7 +65,7 @@
                 </Frame>
 
                 <!-- Show My Numbers Button -->
-                <Button Text="📋 Show My SIM Numbers" 
+                <!--<Button Text="📋 Show My SIM Numbers" 
                         BackgroundColor="Transparent" 
                         TextColor="#4A90E2" 
                         FontSize="14" 
@@ -70,7 +73,7 @@
                         BorderWidth="1"
                         CornerRadius="8" 
                         HeightRequest="40" 
-                        Clicked="OnShowMyNumbersClicked"/>
+                        Clicked="OnShowMyNumbersClicked"/>-->
 
                 <!-- Remember Me & Forgot Password -->
                 <StackLayout Orientation="Horizontal" Margin="5,0">
@@ -105,11 +108,11 @@
                         Clicked="OnLoginClicked"/>
 
                 <!-- Loading Indicator -->
-                <ActivityIndicator x:Name="LoadingIndicator" 
+                <!--<ActivityIndicator x:Name="LoadingIndicator" 
                                    IsVisible="False" 
                                    IsRunning="False" 
                                    Color="#4A90E2" 
-                                   HorizontalOptions="Center"/>
+                                   HorizontalOptions="Center"/>-->
 
                 <!-- Security Note -->
                 <Label Text="🔒 For security, we verify your number with your device SIM" 
@@ -150,4 +153,7 @@
 
         </Grid>
     </ScrollView>
+
+        <custom:CustomToastControl x:Name="Toast" />
+    </Grid>
 </ContentPage>
