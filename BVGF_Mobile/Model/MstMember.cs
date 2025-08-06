@@ -23,6 +23,7 @@ namespace BVGF.Model
         public string? CompAddress { get; set; }
         public string? CompCity { get; set; }
         public DateTime? DOB { get; set; }
+        public bool? IsEdit { get; set; } 
         public string? CategoryName { get; set; }
         public string CityAddress
         {

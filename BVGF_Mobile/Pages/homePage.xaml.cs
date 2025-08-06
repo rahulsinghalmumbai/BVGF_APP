@@ -2,6 +2,7 @@
 using BVGF.Model;
 
 using System.Collections.ObjectModel;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace BVGF.Pages;
@@ -11,6 +12,7 @@ public partial class homePage : ContentPage
     private readonly ApiService _apiService;
     private ObservableCollection<mstCategary> _categories = new ObservableCollection<mstCategary>();
     private Object currentEditingContact;
+
     public ObservableCollection<MstMember> Members => _members;
     public homePage()
     {
@@ -18,7 +20,6 @@ public partial class homePage : ContentPage
         NavigationPage.SetHasNavigationBar(this, false);
         BindingContext = this;
         memberCollectionView.ItemsSource = _members;
-
         _apiService = new ApiService();
         LoadCategoriesAsync();
         RecordCountLabel.Text = "Record : 0";
@@ -127,6 +128,7 @@ public partial class homePage : ContentPage
     {
         var grid = sender as Grid;
         var contact = grid?.BindingContext as MstMember; 
+     
 
         if (contact == null)
             return;
@@ -137,8 +139,19 @@ public partial class homePage : ContentPage
         BackButton.IsVisible = true;
         ContactDetailView.BindingContext = contact;
         await CheckAndShowEditButtonAsync(contact.Mobile1);
+        await CheckAndShowPendingApprovalMessage(contact);
     }
-
+    private async Task CheckAndShowPendingApprovalMessage(MstMember contact)
+    {
+        if (contact.IsEdit == true)
+        {
+            PendingApprovalMessage.IsVisible = true;
+        }
+        else
+        {
+            PendingApprovalMessage.IsVisible = false;
+        }
+    }
     private async Task CheckAndShowEditButtonAsync(string selectedMobile)
     {
         try
@@ -566,8 +579,6 @@ public partial class homePage : ContentPage
             }
         }
     }
-
-  
     private string FormatPhoneNumberForSMS(string rawNumber)
     {
         if (string.IsNullOrWhiteSpace(rawNumber))
@@ -583,7 +594,6 @@ public partial class homePage : ContentPage
 
         return digits;
     }
-
     private string GenerateSMSBody(MstMember contact)
     {
         var message = $"Contact Details:\n";
@@ -657,7 +667,6 @@ public partial class homePage : ContentPage
             await TryAlternativeSMS(contact, phoneNumber);
         }
     }
-   
     private async Task TryAlternativeSMS(MstMember contact, string phoneNumber)
     {
         try
@@ -842,23 +851,51 @@ public partial class homePage : ContentPage
         }
     }
 
-private void OnEditContactClicked(object sender, EventArgs e)
-{
+    private async void OnEditContactClicked(object sender, EventArgs e)
+    {
         if (ContactDetailView.BindingContext is MstMember contact)
         {
-            currentEditingContact = contact;
-            PopulateEditForm(contact);
-            ShowEditPopup();
-        }
-}
-    private void ShowEditPopup()
-{
-    EditContactOverlay.IsVisible = true;
+            try
+            {
+                // Show loading indicator
+                LoadingIndicator.IsVisible = true;
 
-    // Optional: Add fade-in animation
-    EditContactOverlay.FadeTo(1, 250);
-}
-    private void PopulateEditForm(MstMember contact)
+                // API call to get latest member data
+                var updatedContact = await _apiService.GetMemberDataFromApi(contact.MemberID);
+
+                if (updatedContact != null)
+                {
+                    currentEditingContact = updatedContact;
+                    PopulateEditForm(updatedContact);
+                    ShowEditPopup();
+                }
+                else
+                {
+                    await DisplayAlert("Error", "Failed to load contact data", "OK");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in OnEditContactClicked: {ex.Message}");
+                await DisplayAlert("Error", "Something went wrong while loading contact", "OK");
+            }
+            finally
+            {
+                LoadingIndicator.IsVisible = false;
+            }
+        }
+    }
+
+   
+
+    private void ShowEditPopup()
+    {
+        EditContactOverlay.IsVisible = true;
+        // Optional: Add fade-in animation
+        EditContactOverlay.FadeTo(1, 250);
+    }
+
+    private void PopulateEditForm(MemberEditPopup contact)
     {
         try
         {
@@ -905,7 +942,7 @@ private void OnEditContactClicked(object sender, EventArgs e)
         try
         {
             // First cast the currentEditingContact to MstMember
-            if (!(currentEditingContact is MstMember originalContact))
+            if (!(currentEditingContact is MemberEditPopup originalContact))
             {
                 await DisplayAlert("Error", "Invalid contact data", "OK");
                 return;
@@ -925,9 +962,9 @@ private void OnEditContactClicked(object sender, EventArgs e)
             LoadingText.IsVisible = true;
             LoadingText.TextColor = Colors.Black;
             LoadingText.Text = "Updating contact...";
-
+            var updateBy = await SecureStorage.GetAsync("member_id");
             // Create or update the member object with separate fields
-            var member = new MstMember
+            var member = new MemberEditPopup
             {
                 // Preserve original ID
                 MemberID = originalContact.MemberID,
@@ -946,12 +983,13 @@ private void OnEditContactClicked(object sender, EventArgs e)
                 Company = string.IsNullOrWhiteSpace(EditCompanyEntry.Text) ? null : EditCompanyEntry.Text.Trim(),
                 CompCity = string.IsNullOrWhiteSpace(EditCompanyCityEntry.Text) ? null : EditCompanyCityEntry.Text.Trim(),
                 CompAddress = string.IsNullOrWhiteSpace(EditCompanyAddressEditor.Text) ? null : EditCompanyAddressEditor.Text.Trim(),
-                CategoryName = (EditCategoryPicker.SelectedItem as mstCategary)?.CategoryName,
-
+                //CategoryName = (EditCategoryPicker.SelectedItem as mstCategary)?.CategoryName,
+                
                 // Preserve original values
                 DOB = originalContact.DOB,
-                UpdatedBy = 1,
-                UpdatedDt = DateTime.Now
+                CreatedBy= Convert.ToInt32(updateBy),
+                UpdatedBy = Convert.ToInt32(updateBy),
+                //UpdatedDt = DateTime.Now
             };
 
             var apiResponse = await _apiService.UpsertMemberAsync(member);
@@ -1003,28 +1041,28 @@ private void OnEditContactClicked(object sender, EventArgs e)
         });
     });
 }
-private void OnCloseEditPopupClicked(object sender, EventArgs e)
-{
-    HideEditPopup();
-}
-private void OnCancelEditClicked(object sender, EventArgs e)
-{
-    HideEditPopup();
-}
-protected override bool OnBackButtonPressed()
-{
-    if (EditContactOverlay.IsVisible)
+    private void OnCloseEditPopupClicked(object sender, EventArgs e)
     {
         HideEditPopup();
-        return true;
     }
-
-    if (ContactDetailView.IsVisible)
+    private void OnCancelEditClicked(object sender, EventArgs e)
     {
-        OnBackClicked(null, null);
-        return true;
+        HideEditPopup();
     }
+    protected override bool OnBackButtonPressed()
+    {
+        if (EditContactOverlay.IsVisible)
+        {
+            HideEditPopup();
+            return true;
+        }
 
-    return base.OnBackButtonPressed();
-}
+        if (ContactDetailView.IsVisible)
+        {
+            OnBackClicked(null, null);
+            return true;
+        }
+
+        return base.OnBackButtonPressed();
+    }
 }

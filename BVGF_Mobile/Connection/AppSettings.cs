@@ -10,9 +10,9 @@ namespace BVGF.Connection
     {
         //public const string BaseApiUrl = "https://localhost:7055/api/";
         // On Android emulator
-        // public const string BaseApiUrl = "http://172.27.16.1:2030/api/";
+        //public const string BaseApiUrl = "http://172.23.176.1:5151//api/";
         //online
-        public const string BaseApiUrl = "http://195.250.31.98:2030/api/";
+      public const string BaseApiUrl = "http://195.250.31.98:2030/api/";
 
     }
 
@@ -21,7 +21,8 @@ namespace BVGF.Connection
         public const string Login = "MstMember/login";
         public const string SearchMember = "MstMember";
         public const string CategaryDrp = "MstCategary/DropDown";
-        public const string EditMember = "MstMember/UpsertMember";
+        public const string EditMember = "MstMember_Edit/UpsertMember_Edit";
+        public const string GetMemberDataByMemberId = "MstMember_Edit/GetMember_EditByMemId";
 
     }
 }

@@ -43,7 +43,7 @@
                        VerticalOptions="Center"
                        VerticalTextAlignment="Center"
                        LineBreakMode="WordWrap"
-                       MaximumWidthRequest="200" />
+                       MaximumWidthRequest="250" />
             </StackLayout>
         </Frame>
 

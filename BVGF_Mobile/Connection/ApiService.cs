@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace BVGF.Connection
 {
@@ -22,13 +21,22 @@ namespace BVGF.Connection
         {
             try
             {
-               // var url = $"http://195.250.31.98:2030/api/MstMember/login?MobileNo=9559828827";
                 var url = $"{Endpoints.Login}?MobileNo={usermobile}";
                 var response = await _httpClient.GetAsync(url);
 
                 if (response.IsSuccessStatusCode)
                 {
                     string responseBody = await response.Content.ReadAsStringAsync();
+                    var result = JsonSerializer.Deserialize<ApiResponse<MstMember>>(responseBody, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+                    if (result?.Data?.MemberID != null)
+                    {
+                        var memberId = result.Data.MemberID.ToString();
+                        await SecureStorage.SetAsync("member_id", memberId);
+                    }
+
                     return response.IsSuccessStatusCode ? responseBody : null;
                 }
                 else
@@ -117,7 +125,7 @@ namespace BVGF.Connection
             }
         }
 
-        public async Task<ApiResponse<int>> UpsertMemberAsync(MstMember member)
+        public async Task<ApiResponse<int>> UpsertMemberAsync(MemberEditPopup member)
         {
             try
             {
@@ -158,6 +166,53 @@ namespace BVGF.Connection
                 };
             }
         }
+        public async Task<MemberEditPopup> GetMemberDataFromApi(long memberId)
+        {
+            try
+            {
+                var url = $"{Endpoints.GetMemberDataByMemberId}?MemberId={memberId}";
+
+                 var response = await _httpClient.GetAsync(url);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    string jsonContent = await response.Content.ReadAsStringAsync();
+                    var result = JsonSerializer.Deserialize<ApiResponse<MemberEditPopup>>(jsonContent, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+
+                    return result.Data;
+                }
+                else
+                {
+                    Console.WriteLine($"API call failed with status code: {response.StatusCode}");
+                    return null;
+                }
+            }
+            catch (HttpRequestException httpEx)
+            {
+                Console.WriteLine($"HTTP Request error: {httpEx.Message}");
+                return null;
+            }
+            catch (TaskCanceledException tcEx)
+            {
+                Console.WriteLine($"Request timeout: {tcEx.Message}");
+                return null;
+            }
+            catch (JsonException jsonEx)
+            {
+                Console.WriteLine($"JSON deserialization error: {jsonEx.Message}");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Unexpected error: {ex.Message}");
+                return null;
+            }
+        }
+
+
 
 
     }
