@@ -36,6 +36,7 @@
             <Label Grid.Column="1" 
                    Text="BT Address Book" 
                    FontSize="20" 
+                   Margin="0,5,5,5"
                    FontAttributes="Bold" 
                    TextColor="White" 
                    VerticalOptions="Center" 
@@ -126,6 +127,7 @@
                 <Entry Grid.Column="2" 
                        x:Name="MobileEntry"
                        Placeholder="Mobile" 
+                       Keyboard="Numeric"
                        BackgroundColor="White"
                        TextColor="Black"
                        PlaceholderColor="#666"
@@ -262,6 +264,8 @@
                             Margin="10,0,0,0"
                             HeightRequest="40"
                             Clicked="OnBackClicked" />
+
+                   
 
                     <!-- Contact Header -->
                     <Grid BackgroundColor="#00BCD4" Padding="20,5,0,0">
@@ -668,11 +672,22 @@
                                        TextColor="#666" />
                             </StackLayout>
                         </Grid>-->
-
+                        <!-- Pending Approval Message -->
+                        <Label x:Name="PendingApprovalMessage"
+                                Text="Pending for Approval from Admin"
+                                FontSize="16"
+                                FontAttributes="Bold"
+                                TextColor="Red"
+                                
+                                Padding="1,0"
+                                Margin="0,5,1,1"
+                                HorizontalOptions="FillAndExpand"
+                                HorizontalTextAlignment="Center"
+                                IsVisible="False" />
                         <!-- Edit Button (Centered) -->
                         <Button x:Name="EditContactButton" 
                                 Text="Edit Contact" 
-                                BackgroundColor="#FF9800" 
+                                BackgroundColor="#00BCD4" 
                                 TextColor="White" 
                                 FontSize="16"
                                 FontAttributes="Bold"
@@ -858,6 +873,7 @@
                                 <Entry x:Name="EditEmail1Entry"
                            Placeholder="Enter email address" 
                            Keyboard="Email"
+                          IsReadOnly="True"
                            BackgroundColor="#F5F5F5"
                            TextColor="Black"
                            PlaceholderColor="#666"
