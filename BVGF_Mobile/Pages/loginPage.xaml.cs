@@ -1,4 +1,5 @@
 ﻿using BVGF.Connection;
+using CommunityToolkit.Maui.Media;
 using Microsoft.Maui.Controls;
 using System;
 using System.Threading.Tasks;
@@ -61,7 +62,10 @@ namespace BVGF.Pages
                 {
                     await SecureStorage.SetAsync("logged_in_mobile", PasswordEntry.Text.Trim());
                     // await DisplayAlert("Success", "Login successful!", "OK");
-                    await Navigation.PushAsync(new homePage());
+                    //await Navigation.PushAsync(new homePage());
+                    var speechToText = Handler.MauiContext.Services.GetService<ISpeechToText>();
+                    await Navigation.PushAsync(new homePage(speechToText));
+
                 }
                 else
                 {

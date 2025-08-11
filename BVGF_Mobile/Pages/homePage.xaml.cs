@@ -1,7 +1,9 @@
 ﻿using BVGF.Connection;
 using BVGF.Model;
-
+using CommunityToolkit.Maui.Media;
+using Microsoft.Maui.Controls.PlatformConfiguration;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -12,9 +14,11 @@ public partial class homePage : ContentPage
     private readonly ApiService _apiService;
     private ObservableCollection<mstCategary> _categories = new ObservableCollection<mstCategary>();
     private Object currentEditingContact;
+    private bool isListening = false;
 
+    private readonly ISpeechToText _speechToText;
     public ObservableCollection<MstMember> Members => _members;
-    public homePage()
+    public homePage(ISpeechToText speechToText)
     {
         InitializeComponent();
         NavigationPage.SetHasNavigationBar(this, false);
@@ -24,6 +28,281 @@ public partial class homePage : ContentPage
         LoadCategoriesAsync();
         RecordCountLabel.Text = "Record : 0";
         _members.Clear();
+        _speechToText = speechToText;
+    }
+
+
+
+    private async void OnCompanyMicClicked(object sender, EventArgs e)
+    {
+        await StartSpeechToText(CompanyEntry, CompanyMicButton, "Company");
+    }
+
+    private async void OnNameMicClicked(object sender, EventArgs e)
+    {
+        await StartSpeechToText(NameEntry, NameMicButton, "Name");
+    }
+
+    private async void OnCityMicClicked(object sender, EventArgs e)
+    {
+        await StartSpeechToText(CityEntry, CityMicButton, "City");
+    }
+
+    private async void OnMobileMicClicked(object sender, EventArgs e)
+    {
+        await StartSpeechToText(MobileEntry, MobileMicButton, "Mobile", isMobile: true);
+    }
+
+    private async Task StartSpeechToText(Entry targetEntry, Button micButton, string fieldName, bool isMobile = false)
+    {
+        try
+        {
+            if (isListening)
+            {
+                await DisplayAlert("Info", "Already listening. Please wait...", "OK");
+                return;
+            }
+
+            if (targetEntry == null)
+            {
+                await DisplayAlert("Error", "Entry field is null!", "OK");
+                return;
+            }
+
+            if (_speechToText == null)
+            {
+                await DisplayAlert("Error", "Speech service not initialized!", "OK");
+                return;
+            }
+
+            var granted = await _speechToText.RequestPermissions(CancellationToken.None);
+            if (!granted)
+            {
+                await DisplayAlert("Permission Error", "Microphone permission denied!", "OK");
+                ResetMicButton(micButton);
+                return;
+            }
+
+            await ShowSpeechUI(fieldName, micButton);
+
+            await Task.Delay(500); 
+
+            var options = new SpeechToTextOptions
+            {
+                Culture = CultureInfo.GetCultureInfo("en-US"),
+                ShouldReportPartialResults = true
+            };
+
+            EventHandler<SpeechToTextRecognitionResultUpdatedEventArgs> updatedHandler = null;
+            EventHandler<SpeechToTextRecognitionResultCompletedEventArgs> completedHandler = null;
+
+            updatedHandler = (s, e) =>
+            {
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    try
+                    {
+                        var text = e.RecognitionResult;
+                        if (!string.IsNullOrWhiteSpace(text))
+                        {
+                            text = text.Trim();
+                            if (isMobile)
+                                text = CleanMobileNumber(text);
+
+                            targetEntry.Text = text;
+
+                            UpdateSpeechStatus($"Listening... \"{text.Substring(0, Math.Min(text.Length, 20))}\"");
+                        }
+                    }
+                    catch { }
+                });
+            };
+
+            completedHandler = (s, e) =>
+            {
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    try
+                    {
+                        var finalText = e.RecognitionResult?.Text;
+                        if (!string.IsNullOrWhiteSpace(finalText))
+                        {
+                            finalText = finalText.Trim();
+                            if (isMobile)
+                                finalText = CleanMobileNumber(finalText);
+
+                            targetEntry.Text = finalText;
+
+                            UpdateSpeechStatus($"✅ Got: \"{finalText.Substring(0, Math.Min(finalText.Length, 30))}\"");
+
+                            // Hide after 2 seconds
+                            Device.StartTimer(TimeSpan.FromSeconds(2), () =>
+                            {
+                                HideSpeechUI();
+                                return false;
+                            });
+                        }
+                        else
+                        {
+                            UpdateSpeechStatus("❌ No speech detected");
+                            Device.StartTimer(TimeSpan.FromSeconds(2), () =>
+                            {
+                                HideSpeechUI();
+                                return false;
+                            });
+                        }
+                    }
+                    catch { }
+                });
+
+                _speechToText.RecognitionResultUpdated -= updatedHandler;
+                _speechToText.RecognitionResultCompleted -= completedHandler;
+            };
+
+            _speechToText.RecognitionResultUpdated += updatedHandler;
+            _speechToText.RecognitionResultCompleted += completedHandler;
+
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+            await _speechToText.StartListenAsync(options, cts.Token);
+        }
+        catch (TaskCanceledException)
+        {
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                UpdateSpeechStatus("⏱️ Speech timeout");
+                Device.StartTimer(TimeSpan.FromSeconds(2), () =>
+                {
+                    HideSpeechUI();
+                    return false;
+                });
+            });
+        }
+        catch (Exception ex)
+        {
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                UpdateSpeechStatus($"❌ Error: {ex.Message}");
+                Device.StartTimer(TimeSpan.FromSeconds(3), () =>
+                {
+                    HideSpeechUI();
+                    return false;
+                });
+            });
+        }
+        finally
+        {
+            ResetMicButton(micButton);
+        }
+    }
+
+    private async Task ShowSpeechUI(string fieldName, Button micButton)
+    {
+        await MainThread.InvokeOnMainThreadAsync(() =>
+        {
+            isListening = true;
+
+            micButton.IsEnabled = false;
+
+            SpeechStatusFrame.IsVisible = true;
+            SpeechStatusIcon.Text = "⚪";
+            SpeechStatusIcon.TextColor = Colors.White;
+            SpeakNowLabel.Text = $"Speak {fieldName} now...";
+
+            StartPulsingAnimation();
+
+            // Animate frame appearance
+            SpeechStatusFrame.Opacity = 0;
+            SpeechStatusFrame.FadeTo(1, 300);
+        });
+    }
+
+    private void UpdateSpeechStatus(string message)
+    {
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            if (SpeechStatusFrame.IsVisible)
+            {
+                SpeakNowLabel.Text = message;
+            }
+        });
+    }
+
+    private async void HideSpeechUI()
+    {
+        await MainThread.InvokeOnMainThreadAsync(async () =>
+        {
+            StopPulsingAnimation();
+            await SpeechStatusFrame.FadeTo(0, 300);
+            SpeechStatusFrame.IsVisible = false;
+            SpeechStatusFrame.Opacity = 1; 
+        });
+    }
+
+    private void StartPulsingAnimation()
+    {
+        Device.StartTimer(TimeSpan.FromMilliseconds(500), () =>
+        {
+            if (!isListening || !SpeechStatusFrame.IsVisible)
+                return false;
+
+            MainThread.BeginInvokeOnMainThread(async () =>
+            {
+                if (SpeechStatusIcon.Text == "⚪")
+                {
+                   SpeechStatusIcon.Text = "⚪";
+                    await SpeechStatusIcon.ScaleTo(1.2, 250);
+                }
+                else
+                {
+                    SpeechStatusIcon.Text = "⚪";
+                    await SpeechStatusIcon.ScaleTo(1.0, 250);
+                }
+            });
+
+            return isListening && SpeechStatusFrame.IsVisible;
+        });
+    }
+
+    private void StopPulsingAnimation()
+    {
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            SpeechStatusIcon.Scale = 1.0;
+            SpeechStatusIcon.Text = "⚪";
+        });
+    }
+
+    private void ResetMicButton(Button micButton)
+    {
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            isListening = false;
+            micButton.IsEnabled = true;
+        });
+    }
+
+    private string CleanMobileNumber(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+            return "";
+
+        var cleaned = input.ToLower()
+            .Replace("zero", "0")
+            .Replace("one", "1")
+            .Replace("two", "2")
+            .Replace("three", "3")
+            .Replace("four", "4")
+            .Replace("five", "5")
+            .Replace("six", "6")
+            .Replace("seven", "7")
+            .Replace("eight", "8")
+            .Replace("nine", "9")
+            .Replace(" ", "")
+            .Replace("-", "")
+            .Replace("(", "")
+            .Replace(")", "");
+
+        return new string(cleaned.Where(c => char.IsDigit(c) || c == '+').ToArray());
     }
     private void ShowLoading(bool show, string message = "Searching...")
     {
