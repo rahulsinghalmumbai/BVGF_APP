@@ -21,7 +21,6 @@ namespace BVGF.Pages
 
         private async void OnLoginClicked(object sender, EventArgs e)
         {
-            // Step 1: Basic input validation
             if (string.IsNullOrWhiteSpace(PasswordEntry.Text))
             {
                 await Toast.ShowAsync("Please enter mobile number");
@@ -52,14 +51,25 @@ namespace BVGF.Pages
 
                 LoginButton.Text = "Checking Credential...";
                 await Task.Delay(100); 
-                var verification = await _simService.VerifyPhoneNumberAsync(PasswordEntry.Text.Trim());
+                var verificationResponse = await _simService.VerifyPhoneNumberAsync(PasswordEntry.Text.Trim());
+                if (verificationResponse.Result != VerificationResult.Success)
+                {
+                    await DisplayAlert("Verification Failed",
+                        verificationResponse.Message,
+                        "OK");
+                    return;
+                }
 
                 LoginButton.Text = "Logging in...";
                 await Task.Delay(100);
-                string isLoginSuccessful = await _apiService.LoginAsync(PasswordEntry.Text.Trim());
 
-                if (!string.IsNullOrEmpty(isLoginSuccessful))
+                var isLoginSuccessful = await _apiService.LoginAsync(PasswordEntry.Text.Trim());
+
+                if (isLoginSuccessful != null &&
+                   isLoginSuccessful.Status == "Success" &&
+                   isLoginSuccessful.Message == "Login Successfully")
                 {
+                    
                     await SecureStorage.SetAsync("logged_in_mobile", PasswordEntry.Text.Trim());
                     // await DisplayAlert("Success", "Login successful!", "OK");
                     //await Navigation.PushAsync(new homePage());

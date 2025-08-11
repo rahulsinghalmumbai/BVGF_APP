@@ -470,7 +470,7 @@
                                    Padding="0"
                                    HasShadow="True">
                                 <Frame.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnSMSTapped" />
+                                    <TapGestureRecognizer Tapped="OnShareTapped" />
                                 </Frame.GestureRecognizers>
                                 <Label Text="📤" 
                                        FontSize="20" 

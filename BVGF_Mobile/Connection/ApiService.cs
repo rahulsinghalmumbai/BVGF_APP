@@ -17,7 +17,7 @@ namespace BVGF.Connection
                 BaseAddress = new Uri(AppSettings.BaseApiUrl)
             };
         }
-        public async Task<string> LoginAsync(string usermobile)
+        public async Task<ApiResponse<MstMember>> LoginAsync(string usermobile)
         {
             try
             {
@@ -31,19 +31,19 @@ namespace BVGF.Connection
                     {
                         PropertyNameCaseInsensitive = true
                     });
+
                     if (result?.Data?.MemberID != null)
                     {
                         var memberId = result.Data.MemberID.ToString();
                         await SecureStorage.SetAsync("member_id", memberId);
                     }
 
-                    return response.IsSuccessStatusCode ? responseBody : null;
+                    return result;
                 }
                 else
                 {
                     return null;
                 }
-
             }
             catch (Exception ex)
             {
@@ -51,6 +51,7 @@ namespace BVGF.Connection
                 throw;
             }
         }
+
 
         public async Task<List<MstMember>> GetMembersAsync(
      string company, long? category, string name, string city, string mobile)
