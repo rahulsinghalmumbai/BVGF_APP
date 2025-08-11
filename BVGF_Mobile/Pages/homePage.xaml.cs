@@ -1,7 +1,9 @@
 ﻿using BVGF.Connection;
 using BVGF.Model;
-
+using CommunityToolkit.Maui.Media;
+using Microsoft.Maui.Controls.PlatformConfiguration;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -12,9 +14,11 @@ public partial class homePage : ContentPage
     private readonly ApiService _apiService;
     private ObservableCollection<mstCategary> _categories = new ObservableCollection<mstCategary>();
     private Object currentEditingContact;
+    private bool isListening = false;
 
+    private readonly ISpeechToText _speechToText;
     public ObservableCollection<MstMember> Members => _members;
-    public homePage()
+    public homePage(ISpeechToText speechToText)
     {
         InitializeComponent();
         NavigationPage.SetHasNavigationBar(this, false);
@@ -24,7 +28,284 @@ public partial class homePage : ContentPage
         LoadCategoriesAsync();
         RecordCountLabel.Text = "Record : 0";
         _members.Clear();
+        _speechToText = speechToText;
     }
+
+
+
+    private async void OnCompanyMicClicked(object sender, EventArgs e)
+    {
+        await StartSpeechToText(CompanyEntry, CompanyMicButton, "Company");
+    }
+
+    private async void OnNameMicClicked(object sender, EventArgs e)
+    {
+        await StartSpeechToText(NameEntry, NameMicButton, "Name");
+    }
+
+    private async void OnCityMicClicked(object sender, EventArgs e)
+    {
+        await StartSpeechToText(CityEntry, CityMicButton, "City");
+    }
+
+    private async void OnMobileMicClicked(object sender, EventArgs e)
+    {
+        await StartSpeechToText(MobileEntry, MobileMicButton, "Mobile", isMobile: true);
+    }
+
+    private async Task StartSpeechToText(Entry targetEntry, Button micButton, string fieldName, bool isMobile = false)
+    {
+        try
+        {
+            if (isListening)
+            {
+                await DisplayAlert("Info", "Already listening. Please wait...", "OK");
+                return;
+            }
+
+            if (targetEntry == null)
+            {
+                await DisplayAlert("Error", "Entry field is null!", "OK");
+                return;
+            }
+
+            if (_speechToText == null)
+            {
+                await DisplayAlert("Error", "Speech service not initialized!", "OK");
+                return;
+            }
+
+            var granted = await _speechToText.RequestPermissions(CancellationToken.None);
+            if (!granted)
+            {
+                await DisplayAlert("Permission Error", "Microphone permission denied!", "OK");
+                ResetMicButton(micButton);
+                return;
+            }
+
+            await ShowSpeechUI(fieldName, micButton);
+
+            await Task.Delay(500); 
+
+            var options = new SpeechToTextOptions
+            {
+                Culture = CultureInfo.GetCultureInfo("en-US"),
+                ShouldReportPartialResults = true
+            };
+
+            EventHandler<SpeechToTextRecognitionResultUpdatedEventArgs> updatedHandler = null;
+            EventHandler<SpeechToTextRecognitionResultCompletedEventArgs> completedHandler = null;
+
+            updatedHandler = (s, e) =>
+            {
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    try
+                    {
+                        var text = e.RecognitionResult;
+                        if (!string.IsNullOrWhiteSpace(text))
+                        {
+                            text = text.Trim();
+                            if (isMobile)
+                                text = CleanMobileNumber(text);
+
+                            targetEntry.Text = text;
+
+                            UpdateSpeechStatus($"Listening... \"{text.Substring(0, Math.Min(text.Length, 20))}\"");
+                        }
+                    }
+                    catch { }
+                });
+            };
+
+            completedHandler = (s, e) =>
+            {
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    try
+                    {
+                        var finalText = e.RecognitionResult?.Text;
+                        if (!string.IsNullOrWhiteSpace(finalText))
+                        {
+                            finalText = finalText.Trim();
+                            if (isMobile)
+                                finalText = CleanMobileNumber(finalText);
+
+                            targetEntry.Text = finalText;
+
+                            UpdateSpeechStatus($"✅ Got: \"{finalText.Substring(0, Math.Min(finalText.Length, 30))}\"");
+
+                            // Hide after 2 seconds
+                            Device.StartTimer(TimeSpan.FromSeconds(2), () =>
+                            {
+                                HideSpeechUI();
+                                return false;
+                            });
+                        }
+                        else
+                        {
+                            UpdateSpeechStatus("❌ No speech detected");
+                            Device.StartTimer(TimeSpan.FromSeconds(2), () =>
+                            {
+                                HideSpeechUI();
+                                return false;
+                            });
+                        }
+                    }
+                    catch { }
+                });
+
+                _speechToText.RecognitionResultUpdated -= updatedHandler;
+                _speechToText.RecognitionResultCompleted -= completedHandler;
+            };
+
+            _speechToText.RecognitionResultUpdated += updatedHandler;
+            _speechToText.RecognitionResultCompleted += completedHandler;
+
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+            await _speechToText.StartListenAsync(options, cts.Token);
+        }
+        catch (TaskCanceledException)
+        {
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                UpdateSpeechStatus("⏱️ Speech timeout");
+                Device.StartTimer(TimeSpan.FromSeconds(2), () =>
+                {
+                    HideSpeechUI();
+                    return false;
+                });
+            });
+        }
+        catch (Exception ex)
+        {
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                UpdateSpeechStatus($"❌ Error: {ex.Message}");
+                Device.StartTimer(TimeSpan.FromSeconds(3), () =>
+                {
+                    HideSpeechUI();
+                    return false;
+                });
+            });
+        }
+        finally
+        {
+            ResetMicButton(micButton);
+        }
+    }
+
+    private async Task ShowSpeechUI(string fieldName, Button micButton)
+    {
+        await MainThread.InvokeOnMainThreadAsync(() =>
+        {
+            isListening = true;
+
+            micButton.IsEnabled = false;
+
+            SpeechStatusFrame.IsVisible = true;
+            SpeechStatusIcon.Text = "⚪";
+            SpeechStatusIcon.TextColor = Colors.White;
+            SpeakNowLabel.Text = $"Speak {fieldName} now...";
+
+            StartPulsingAnimation();
+
+            // Animate frame appearance
+            SpeechStatusFrame.Opacity = 0;
+            SpeechStatusFrame.FadeTo(1, 300);
+        });
+    }
+
+    private void UpdateSpeechStatus(string message)
+    {
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            if (SpeechStatusFrame.IsVisible)
+            {
+                SpeakNowLabel.Text = message;
+            }
+        });
+    }
+
+    private async void HideSpeechUI()
+    {
+        await MainThread.InvokeOnMainThreadAsync(async () =>
+        {
+            StopPulsingAnimation();
+            await SpeechStatusFrame.FadeTo(0, 300);
+            SpeechStatusFrame.IsVisible = false;
+            SpeechStatusFrame.Opacity = 1; 
+        });
+    }
+
+    private void StartPulsingAnimation()
+    {
+        Device.StartTimer(TimeSpan.FromMilliseconds(500), () =>
+        {
+            if (!isListening || !SpeechStatusFrame.IsVisible)
+                return false;
+
+            MainThread.BeginInvokeOnMainThread(async () =>
+            {
+                if (SpeechStatusIcon.Text == "⚪")
+                {
+                   SpeechStatusIcon.Text = "⚪";
+                    await SpeechStatusIcon.ScaleTo(1.2, 250);
+                }
+                else
+                {
+                    SpeechStatusIcon.Text = "⚪";
+                    await SpeechStatusIcon.ScaleTo(1.0, 250);
+                }
+            });
+
+            return isListening && SpeechStatusFrame.IsVisible;
+        });
+    }
+
+    private void StopPulsingAnimation()
+    {
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            SpeechStatusIcon.Scale = 1.0;
+            SpeechStatusIcon.Text = "⚪";
+        });
+    }
+
+    private void ResetMicButton(Button micButton)
+    {
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            isListening = false;
+            micButton.IsEnabled = true;
+        });
+    }
+
+    private string CleanMobileNumber(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+            return "";
+
+        var cleaned = input.ToLower()
+            .Replace("zero", "0")
+            .Replace("one", "1")
+            .Replace("two", "2")
+            .Replace("three", "3")
+            .Replace("four", "4")
+            .Replace("five", "5")
+            .Replace("six", "6")
+            .Replace("seven", "7")
+            .Replace("eight", "8")
+            .Replace("nine", "9")
+            .Replace(" ", "")
+            .Replace("-", "")
+            .Replace("(", "")
+            .Replace(")", "");
+
+        return new string(cleaned.Where(c => char.IsDigit(c) || c == '+').ToArray());
+    }
+
+
     private void ShowLoading(bool show, string message = "Searching...")
     {
         LoadingOverlay.IsVisible = show;
@@ -41,7 +322,7 @@ public partial class homePage : ContentPage
     private async void OnHistoryClicked(object sender, EventArgs e)
     {
         await Navigation.PushAsync(new BVGF.Pages.history());
-        
+
     }
 
     private async void OnSearchClicked(object sender, EventArgs e)
@@ -101,7 +382,7 @@ public partial class homePage : ContentPage
             _members.Clear();
             RecordCountLabel.Text = "Record : 0";
 
-          
+
             await Task.Delay(200);
         }
         catch (Exception ex)
@@ -110,7 +391,7 @@ public partial class homePage : ContentPage
         }
         finally
         {
-           
+
             ShowLoading(false);
         }
     }
@@ -127,8 +408,8 @@ public partial class homePage : ContentPage
     private async void OnContactTapped(object sender, EventArgs e)
     {
         var grid = sender as Grid;
-        var contact = grid?.BindingContext as MstMember; 
-     
+        var contact = grid?.BindingContext as MstMember;
+
 
         if (contact == null)
             return;
@@ -175,34 +456,102 @@ public partial class homePage : ContentPage
         SearchSection.IsVisible = true;
         //FloatingButtons.IsVisible = true;
     }
+    private string FormatPhoneNumber(string rawNumber)
+    {
+        if (string.IsNullOrWhiteSpace(rawNumber))
+            return string.Empty;
+
+        var digits = new string(rawNumber
+            .Where((c, i) => char.IsDigit(c) || (i == 0 && c == '+'))
+            .ToArray());
+
+        if (digits.Length < 10)
+            return string.Empty;
+
+        return digits;
+    }
+
     private async void OnCallTapped(object sender, EventArgs e)
     {
         try
         {
             var contact = ContactDetailView.BindingContext as MstMember;
-            if (contact == null || string.IsNullOrWhiteSpace(contact.Mobile1))
+            if (contact == null)
             {
-                await DisplayAlert("Error", "No valid contact information found", "OK");
+                await DisplayAlert("Error", "No contact selected", "OK");
                 return;
             }
 
-            // 1. Check if running on a physical device (emulators don't support calling)
             if (DeviceInfo.DeviceType == DeviceType.Virtual)
             {
                 await DisplayAlert("Info", "Phone calls cannot be made from emulators", "OK");
                 return;
             }
 
-            var phoneNumber = FormatPhoneNumber(contact.Mobile1);
+            var availableMobiles = new List<(string Label, string Number, string FormattedNumber)>();
+
+            if (!string.IsNullOrWhiteSpace(contact.Mobile1))
+                availableMobiles.Add(("Mobile 1", contact.Mobile1, FormatForDisplay(contact.Mobile1)));
+
+            if (!string.IsNullOrWhiteSpace(contact.Mobile2))
+                availableMobiles.Add(("Mobile 2", contact.Mobile2, FormatForDisplay(contact.Mobile2)));
+
+            if (!string.IsNullOrWhiteSpace(contact.Mobile3))
+                availableMobiles.Add(("Mobile 3", contact.Mobile3, FormatForDisplay(contact.Mobile3)));
+
+            // If no mobile numbers available
+            if (availableMobiles.Count == 0)
+            {
+                await DisplayAlert("Error", "No mobile number available for this contact", "OK");
+                return;
+            }
+
+            string selectedNumber;
+
+            // If only one mobile number, use it directly
+            if (availableMobiles.Count == 1)
+            {
+                selectedNumber = availableMobiles[0].Number;
+            }
+            else
+            {
+                // Create custom buttons for each number
+                var buttons = new Dictionary<string, string>();
+                foreach (var mobile in availableMobiles)
+                {
+                    buttons.Add($"{mobile.Label}\n{mobile.FormattedNumber}", mobile.Number);
+                }
+
+                // Show enhanced action sheet
+                var action = await DisplayActionSheet(
+                    "Choose mobile number to call:",
+                    "Cancel",
+                    null,
+                    buttons.Keys.ToArray()
+                );
+
+                if (action == null || action == "Cancel")
+                    return;
+
+                // Get the selected number
+                if (!buttons.TryGetValue(action, out selectedNumber))
+                {
+                    await DisplayAlert("Error", "Invalid selection", "OK");
+                    return;
+                }
+            }
+
+            // Format and validate the phone number
+            var phoneNumber = FormatPhoneNumber(selectedNumber);
             if (string.IsNullOrWhiteSpace(phoneNumber))
             {
                 await DisplayAlert("Error", "Invalid phone number format", "OK");
                 return;
             }
 
+            // Check permissions for Android
             if (DeviceInfo.Platform == DevicePlatform.Android)
             {
-                // Check and request CALL_PHONE permission
                 var status = await Permissions.CheckStatusAsync<Permissions.Phone>();
                 if (status != PermissionStatus.Granted)
                 {
@@ -216,6 +565,7 @@ public partial class homePage : ContentPage
                 }
             }
 
+            // Make the call
             try
             {
                 if (PhoneDialer.Default.IsSupported)
@@ -238,22 +588,27 @@ public partial class homePage : ContentPage
             await DisplayAlert("Error", $"Could not initiate call: {ex.Message}", "OK");
         }
     }
-    private string FormatPhoneNumber(string rawNumber)
+
+    private string FormatForDisplay(string phoneNumber)
     {
-        if (string.IsNullOrWhiteSpace(rawNumber))
+        if (string.IsNullOrWhiteSpace(phoneNumber))
             return string.Empty;
 
-        //// Remove all non-digit characters except '+' at start
-        var digits = new string(rawNumber
-            .Where((c, i) => char.IsDigit(c) || (i == 0 && c == '+'))
-            .ToArray());
+        // Format for display (add spaces or dashes for better readability)
+        var digits = new string(phoneNumber.Where(c => char.IsDigit(c)).ToArray());
 
-        //// Ensure minimum length (adjust according to your requirements)
-        if (digits.Length < 10)
-            return string.Empty;
+        if (digits.Length == 10)
+        {
+            return $"{digits.Substring(0, 5)} {digits.Substring(5)}";
+        }
+        else if (digits.Length > 10 && digits.StartsWith("+"))
+        {
+            return $"{digits.Substring(0, digits.Length - 10)} {digits.Substring(digits.Length - 10, 5)} {digits.Substring(digits.Length - 5)}";
+        }
 
-        return digits;
+        return phoneNumber;
     }
+
     private async void OnWhatsAppTapped(object sender, EventArgs e)
     {
         try
@@ -536,7 +891,8 @@ public partial class homePage : ContentPage
         var formattedNumber = FormatPhoneNumberForWhatsApp(phoneNumber);
         await OpenWhatsAppViaLauncher(contact, formattedNumber);
     }
-    private async void OnSMSTapped(object sender, EventArgs e)
+
+    private async void OnShareTapped(object sender, EventArgs e)
     {
         try
         {
@@ -547,38 +903,380 @@ public partial class homePage : ContentPage
                 return;
             }
 
-            // Check if we have a valid mobile number
-            if (string.IsNullOrWhiteSpace(contact.Mobile1))
-            {
-                await DisplayAlert("Error", "No mobile number available for this contact", "OK");
-                return;
-            }
+            // Generate the contact information to share
+            var shareText = GenerateShareContent(contact);
 
-            // Format the phone number (remove any special characters)
-            var phoneNumber = FormatPhoneNumberForSMS(contact.Mobile1);
-            if (string.IsNullOrWhiteSpace(phoneNumber))
+            try
             {
-                await DisplayAlert("Error", "Invalid phone number format", "OK");
-                return;
-            }
+                var request = new ShareTextRequest
+                {
+                    Text = shareText,
+                    Title = $"Contact: {contact.Name}",
+                    Subject = $"Contact Details - {contact.Name}"
+                };
 
-            // Always use URL scheme approach - more stable
-            await OpenSMSViaLauncher(contact, phoneNumber);
+                await Share.Default.RequestAsync(request);
+            }
+            catch (FeatureNotSupportedException)
+            {
+                // Fallback - copy to clipboard
+                await Clipboard.Default.SetTextAsync(shareText);
+                await DisplayAlert("Info", "Sharing not available. Contact details copied to clipboard.", "OK");
+            }
         }
         catch (Exception ex)
         {
+            await DisplayAlert("Error", $"Could not share contact: {ex.Message}", "OK");
+
+            // Fallback - copy to clipboard
             try
             {
-                // Final fallback - copy to clipboard
-                await Clipboard.Default.SetTextAsync(GenerateSMSBody(ContactDetailView.BindingContext as MstMember));
-                await DisplayAlert("Info", "SMS app not available. Contact details copied to clipboard.", "OK");
+                var contact = ContactDetailView.BindingContext as MstMember;
+                if (contact != null)
+                {
+                    await Clipboard.Default.SetTextAsync(GenerateShareContent(contact));
+                    await DisplayAlert("Info", "Contact details copied to clipboard.", "OK");
+                }
             }
             catch
             {
-                await DisplayAlert("Error", "Could not send SMS. Please try again.", "OK");
+                // Silent fail for clipboard fallback
             }
         }
     }
+
+    private string GenerateShareContent(MstMember contact)
+    {
+        var content = $"📋 Contact Details\n\n";
+        content += $"👤 Name: {contact.Name}\n";
+
+        // Mobile numbers
+        if (!string.IsNullOrEmpty(contact.Mobile1))
+            content += $"📱 Mobile: {contact.Mobile1}\n";
+
+        if (!string.IsNullOrEmpty(contact.Mobile2))
+            content += $"📞 Mobile 2: {contact.Mobile2}\n";
+
+        if (!string.IsNullOrEmpty(contact.Mobile3))
+            content += $"📞 Mobile 3: {contact.Mobile3}\n";
+
+        if (!string.IsNullOrEmpty(contact.Telephone))
+            content += $"☎️ Telephone: {contact.Telephone}\n";
+
+        // Email addresses
+        if (!string.IsNullOrEmpty(contact.Email1))
+            content += $"✉️ Email: {contact.Email1}\n";
+
+        if (!string.IsNullOrEmpty(contact.Email2))
+            content += $"📧 Email 2: {contact.Email2}\n";
+
+        if (!string.IsNullOrEmpty(contact.Email3))
+            content += $"📧 Email 3: {contact.Email3}\n";
+
+        // Address and other details
+        if (!string.IsNullOrEmpty(contact.City))
+            content += $"📍 City: {contact.City}\n";
+
+        if (!string.IsNullOrEmpty(contact.CityAddress))
+            content += $"🏠 Address: {contact.CityAddress}\n";
+
+        if (!string.IsNullOrEmpty(contact.Company))
+            content += $"🏢 Company: {contact.Company}\n";
+
+        if (!string.IsNullOrEmpty(contact.CategoryName))
+            content += $"🏷️ Category: {contact.CategoryName}\n";
+
+        content += $"\n📲 Shared from BT Address Book";
+
+        return content;
+    }
+
+    // Alternative method with file sharing (VCard)
+    private async Task OnShareAsVCardTapped(object sender, EventArgs e)
+    {
+        try
+        {
+            var contact = ContactDetailView.BindingContext as MstMember;
+            if (contact == null)
+            {
+                await DisplayAlert("Error", "No contact selected", "OK");
+                return;
+            }
+
+            // Generate VCard content
+            var vCardContent = GenerateVCard(contact);
+
+            // Create temporary file
+            var fileName = $"{contact.Name.Replace(" ", "_")}_contact.vcf";
+            var filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
+
+            await File.WriteAllTextAsync(filePath, vCardContent);
+
+            try
+            {
+                // Share the file
+                var request = new ShareFileRequest
+                {
+                    Title = $"Contact: {contact.Name}",
+                    File = new ShareFile(filePath)
+                };
+
+                await Share.Default.RequestAsync(request);
+            }
+            catch (FeatureNotSupportedException)
+            {
+                // Fallback to text sharing
+                OnShareTapped(sender, e);
+            }
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Error", $"Could not share contact file: {ex.Message}", "OK");
+
+            // Fallback to text sharing
+            OnShareTapped(sender, e);
+        }
+    }
+
+    private string GenerateVCard(MstMember contact)
+    {
+        var vCard = "BEGIN:VCARD\n";
+        vCard += "VERSION:3.0\n";
+        vCard += $"FN:{contact.Name}\n";
+        vCard += $"N:{contact.Name};;;;\n";
+
+        if (!string.IsNullOrEmpty(contact.Mobile1))
+            vCard += $"TEL;TYPE=CELL:{contact.Mobile1}\n";
+
+        if (!string.IsNullOrEmpty(contact.Mobile2))
+            vCard += $"TEL;TYPE=CELL:{contact.Mobile2}\n";
+
+        if (!string.IsNullOrEmpty(contact.Mobile3))
+            vCard += $"TEL;TYPE=CELL:{contact.Mobile3}\n";
+
+        if (!string.IsNullOrEmpty(contact.Telephone))
+            vCard += $"TEL;TYPE=WORK:{contact.Telephone}\n";
+
+        if (!string.IsNullOrEmpty(contact.Email1))
+            vCard += $"EMAIL:{contact.Email1}\n";
+
+        if (!string.IsNullOrEmpty(contact.Email2))
+            vCard += $"EMAIL:{contact.Email2}\n";
+
+        if (!string.IsNullOrEmpty(contact.Email3))
+            vCard += $"EMAIL:{contact.Email3}\n";
+
+        if (!string.IsNullOrEmpty(contact.Company))
+            vCard += $"ORG:{contact.Company}\n";
+
+        if (!string.IsNullOrEmpty(contact.CityAddress))
+            vCard += $"ADR;TYPE=HOME:;;{contact.CityAddress};{contact.City};;;;\n";
+
+        vCard += "END:VCARD";
+
+        return vCard;
+    }
+
+    // Enhanced share method with multiple options
+    private async Task OnShareWithOptionsClicked(object sender, EventArgs e)
+    {
+        try
+        {
+            var contact = ContactDetailView.BindingContext as MstMember;
+            if (contact == null) return;
+
+            var action = await DisplayActionSheet(
+                "Share Contact As:",
+                "Cancel",
+                null,
+                "Share as Text",
+                "Share as Contact File (VCard)",
+                "Copy to Clipboard"
+            );
+
+            switch (action)
+            {
+                case "Share as Text":
+                    OnShareTapped(sender, e);
+                    break;
+                case "Share as Contact File (VCard)":
+                    await OnShareAsVCardTapped(sender, e);
+                    break;
+                case "Copy to Clipboard":
+                    await Clipboard.Default.SetTextAsync(GenerateShareContent(contact));
+                    await DisplayAlert("Success", "Contact details copied to clipboard!", "OK");
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Error", $"Share error: {ex.Message}", "OK");
+        }
+    }
+
+    // Custom share popup with more granular control (Updated)
+    private async Task OnCustomShareClicked(object sender, EventArgs e)
+    {
+        try
+        {
+            var contact = ContactDetailView.BindingContext as MstMember;
+            if (contact == null) return;
+
+            var shareOptions = new List<string>
+        {
+            "📱 WhatsApp",
+            "💬 SMS/Text",
+            "📧 Email",
+            "📋 Copy to Clipboard",
+            "📄 Share as Contact File"
+
+        };
+
+            var action = await DisplayActionSheet(
+                $"Share {contact.Name}'s contact via:",
+                "Cancel",
+                null,
+                shareOptions.ToArray()
+            );
+
+            if (action == null || action == "Cancel") return;
+
+            switch (action)
+            {
+                case "📱 WhatsApp":
+                    await ShareViaWhatsApp(contact);
+                    break;
+                case "💬 SMS/Text":
+                    await ShareViaSMS(contact);
+                    break;
+                case "📧 Email":
+                    await ShareViaEmail(contact);
+                    break;
+                case "📋 Copy to Clipboard":
+                    await ShareViaClipboard(contact);
+                    break;
+                case "📄 Share as Contact File":
+                    await OnShareAsVCardTapped(sender, e);
+                    break;
+
+            }
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Error", $"Share failed: {ex.Message}", "OK");
+        }
+    }
+
+    private async Task ShareViaWhatsApp(MstMember contact)
+    {
+        try
+        {
+            var message = GenerateShareContent(contact);
+            var encodedMessage = System.Web.HttpUtility.UrlEncode(message);
+
+            // Try to open WhatsApp with the message ready to send
+            var whatsappUri = $"https://wa.me/?text={encodedMessage}";
+
+            var canOpen = await Launcher.CanOpenAsync(whatsappUri);
+            if (canOpen)
+            {
+                await Launcher.OpenAsync(whatsappUri);
+            }
+            else
+            {
+                // Fallback to regular share
+                OnShareTapped(null, null);
+            }
+        }
+        catch
+        {
+            OnShareTapped(null, null);
+        }
+    }
+
+    private async Task ShareViaSMS(MstMember contact)
+    {
+        try
+        {
+            var message = GenerateShareContent(contact);
+
+            try
+            {
+                if (Sms.Default.IsComposeSupported)
+                {
+                    var smsMessage = new SmsMessage
+                    {
+                        Body = message
+                    };
+                    await Sms.Default.ComposeAsync(smsMessage);
+                }
+                else
+                {
+                    throw new FeatureNotSupportedException();
+                }
+            }
+            catch (FeatureNotSupportedException)
+            {
+                // Fallback to SMS URI
+                var encodedMessage = System.Web.HttpUtility.UrlEncode(message);
+                await Launcher.OpenAsync($"sms:?body={encodedMessage}");
+            }
+        }
+        catch
+        {
+            OnShareTapped(null, null);
+        }
+    }
+
+    private async Task ShareViaEmail(MstMember contact)
+    {
+        try
+        {
+            try
+            {
+                if (Email.Default.IsComposeSupported)
+                {
+                    var emailMessage = new EmailMessage
+                    {
+                        Subject = $"Contact Details - {contact.Name}",
+                        Body = GenerateShareContent(contact)
+                    };
+                    await Email.Default.ComposeAsync(emailMessage);
+                }
+                else
+                {
+                    throw new FeatureNotSupportedException();
+                }
+            }
+            catch (FeatureNotSupportedException)
+            {
+                // Fallback to mailto
+                var subject = Uri.EscapeDataString($"Contact Details - {contact.Name}");
+                var body = Uri.EscapeDataString(GenerateShareContent(contact));
+                await Launcher.OpenAsync($"mailto:?subject={subject}&body={body}");
+            }
+        }
+        catch
+        {
+            OnShareTapped(null, null);
+        }
+    }
+
+    private async Task ShareViaClipboard(MstMember contact)
+    {
+        try
+        {
+            await Clipboard.Default.SetTextAsync(GenerateShareContent(contact));
+            await DisplayAlert("Success", "Contact details copied to clipboard!", "OK");
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Error", $"Failed to copy to clipboard: {ex.Message}", "OK");
+        }
+    }
+
+    //end share
+
     private string FormatPhoneNumberForSMS(string rawNumber)
     {
         if (string.IsNullOrWhiteSpace(rawNumber))
@@ -704,7 +1402,7 @@ public partial class homePage : ContentPage
 
         return message;
     }
-  
+
     private async void OnSMSWithOptionsClicked(object sender, EventArgs e)
     {
         try
@@ -801,13 +1499,13 @@ public partial class homePage : ContentPage
                 To = new List<string> { contact.Email1 }
             };
 
-           
+
             await Email.Default.ComposeAsync(message);
         }
         catch (FeatureNotSupportedException)
         {
             var contact = ContactDetailView.BindingContext as MstMember;
-           
+
             await OpenEmailViaLauncher(contact);
         }
         catch (Exception ex)
@@ -820,7 +1518,7 @@ public partial class homePage : ContentPage
     {
         return $@"Hii {contact.Name},";
     }
-  
+
 
     private async Task OpenEmailViaLauncher(MstMember contact)
     {
@@ -850,7 +1548,6 @@ public partial class homePage : ContentPage
                 "Contact details copied to clipboard", "OK");
         }
     }
-
     private async void OnEditContactClicked(object sender, EventArgs e)
     {
         if (ContactDetailView.BindingContext is MstMember contact)
@@ -885,9 +1582,6 @@ public partial class homePage : ContentPage
             }
         }
     }
-
-   
-
     private void ShowEditPopup()
     {
         EditContactOverlay.IsVisible = true;
@@ -984,10 +1678,10 @@ public partial class homePage : ContentPage
                 CompCity = string.IsNullOrWhiteSpace(EditCompanyCityEntry.Text) ? null : EditCompanyCityEntry.Text.Trim(),
                 CompAddress = string.IsNullOrWhiteSpace(EditCompanyAddressEditor.Text) ? null : EditCompanyAddressEditor.Text.Trim(),
                 //CategoryName = (EditCategoryPicker.SelectedItem as mstCategary)?.CategoryName,
-                
+
                 // Preserve original values
                 DOB = originalContact.DOB,
-                CreatedBy= Convert.ToInt32(updateBy),
+                CreatedBy = Convert.ToInt32(updateBy),
                 UpdatedBy = Convert.ToInt32(updateBy),
                 //UpdatedDt = DateTime.Now
             };
@@ -1032,15 +1726,15 @@ public partial class homePage : ContentPage
         }
     }
     private void HideEditPopup()
-{
-    EditContactOverlay.FadeTo(0, 250).ContinueWith(t =>
     {
-        Device.BeginInvokeOnMainThread(() =>
+        EditContactOverlay.FadeTo(0, 250).ContinueWith(t =>
         {
-            EditContactOverlay.IsVisible = false;
+            Device.BeginInvokeOnMainThread(() =>
+            {
+                EditContactOverlay.IsVisible = false;
+            });
         });
-    });
-}
+    }
     private void OnCloseEditPopupClicked(object sender, EventArgs e)
     {
         HideEditPopup();

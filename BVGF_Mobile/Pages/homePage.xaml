@@ -50,6 +50,7 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
             <!-- Filter Icon and Record Count -->
@@ -78,14 +79,28 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <Entry Grid.Column="0" 
-                       x:Name="CompanyEntry"
-                       Placeholder="Company" 
-                       BackgroundColor="White"
-                       TextColor="Black"
-                       PlaceholderColor="#666"
-                       Margin="0,0,5,0"
-                       HeightRequest="45" />
+                <!-- Company Entry with Microphone -->
+                <Grid Grid.Column="0" Margin="0,0,5,0">
+                    <Entry x:Name="CompanyEntry"
+                           Placeholder="Company" 
+                           BackgroundColor="White"
+                           TextColor="Black"
+                           PlaceholderColor="#666"
+                           HeightRequest="45" />
+
+                    <Button x:Name="CompanyMicButton"
+                            Text="🎙️"
+                            FontSize="16"
+                            TextColor="#666"
+                            BackgroundColor="Transparent"
+                            BorderWidth="0"
+                            WidthRequest="30"
+                            HeightRequest="30"
+                            HorizontalOptions="End"
+                            VerticalOptions="Center"
+                            Margin="0,0,10,0"
+                            Clicked="OnCompanyMicClicked" />
+                </Grid>
 
                 <Picker Grid.Column="1" 
                         x:Name="CategoryPicker"
@@ -106,37 +121,103 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <Entry Grid.Column="0" 
-                       x:Name="NameEntry"
-                       Placeholder="Name" 
-                       BackgroundColor="White"
-                       TextColor="Black"
-                       PlaceholderColor="#666"
-                       Margin="0,0,5,0"
-                       HeightRequest="45" />
+                <!-- Name Entry with Microphone -->
+                <Grid Grid.Column="0" Margin="0,0,5,0">
+                    <Entry x:Name="NameEntry"
+                           Placeholder="Name" 
+                           BackgroundColor="White"
+                           TextColor="Black"
+                           PlaceholderColor="#666"
+                           HeightRequest="45" />
 
-                <Entry Grid.Column="1" 
-                       x:Name="CityEntry"
-                       Placeholder="City" 
-                       BackgroundColor="White"
-                       TextColor="Black"
-                       PlaceholderColor="#666"
-                       Margin="5,0,5,0"
-                       HeightRequest="45" />
+                    <Button x:Name="NameMicButton"
+                            Text="🎙️"
+                            FontSize="16"
+                            TextColor="#666"
+                            BackgroundColor="Transparent"
+                            BorderWidth="0"
+                            WidthRequest="30"
+                            HeightRequest="30"
+                            HorizontalOptions="End"
+                            VerticalOptions="Center"
+                            Margin="0,0,10,0"
+                            Clicked="OnNameMicClicked" />
+                </Grid>
 
-                <Entry Grid.Column="2" 
-                       x:Name="MobileEntry"
-                       Placeholder="Mobile" 
-                       Keyboard="Numeric"
-                       BackgroundColor="White"
-                       TextColor="Black"
-                       PlaceholderColor="#666"
-                       Margin="5,0,0,0"
-                       HeightRequest="45" />
+                <!-- City Entry with Microphone -->
+                <Grid Grid.Column="1" Margin="5,0,5,0">
+                    <Entry x:Name="CityEntry"
+                           Placeholder="City" 
+                           BackgroundColor="White"
+                           TextColor="Black"
+                           PlaceholderColor="#666"
+                           HeightRequest="45" />
+
+                    <Button x:Name="CityMicButton"
+                            Text="🎙️"
+                            FontSize="16"
+                            TextColor="#666"
+                            BackgroundColor="Transparent"
+                            BorderWidth="0"
+                            WidthRequest="30"
+                            HeightRequest="30"
+                            HorizontalOptions="End"
+                            VerticalOptions="Center"
+                            Margin="0,0,10,0"
+                            Clicked="OnCityMicClicked" />
+                </Grid>
+
+                <!-- Mobile Entry with Microphone -->
+                <Grid Grid.Column="2" Margin="5,0,0,0">
+                    <Entry x:Name="MobileEntry"
+                           Placeholder="Mobile" 
+                           Keyboard="Numeric"
+                           BackgroundColor="White"
+                           TextColor="Black"
+                           PlaceholderColor="#666"
+                           HeightRequest="45" />
+
+                    <Button x:Name="MobileMicButton"
+                            Text="🎙️"
+                            FontSize="16"
+                            TextColor="#666"
+                            BackgroundColor="Transparent"
+                            BorderWidth="0"
+                            WidthRequest="30"
+                            HeightRequest="30"
+                            HorizontalOptions="End"
+                            VerticalOptions="Center"
+                            Margin="0,0,10,0"
+                            Clicked="OnMobileMicClicked" />
+                </Grid>
             </Grid>
 
-            <!-- Action Buttons -->
-            <Grid Grid.Row="3">
+            <Grid Grid.Row="3" Margin="0,5,0,10">
+                <Frame BackgroundColor="#00BCD4" 
+                       CornerRadius="20" 
+                       Padding="15,8"
+                       HasShadow="False"
+                       BorderColor="#FF9800"
+                       HorizontalOptions="Center"
+                       x:Name="SpeechStatusFrame"
+                       IsVisible="False">
+                    <StackLayout Orientation="Horizontal" Spacing="8">
+                        <Label x:Name="SpeechStatusIcon" 
+                               Text="🔴" 
+                               FontSize="16"
+                               VerticalOptions="Center" />
+                        <Label x:Name="SpeakNowLabel" 
+                               Text="Speak now..."
+                               TextColor="White" 
+                               FontSize="14"
+                               FontAttributes="Bold"
+                               VerticalOptions="Center" />
+                    </StackLayout>
+                </Frame>
+            </Grid>
+
+            <!-- Action Buttons - Now in Row 4 -->
+            <Grid Grid.Row="4">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="*" />
@@ -173,7 +254,6 @@
                         Margin="5,0,0,0"
                         Clicked="OnHistoryClicked"
                         HeightRequest="30" />
-
             </Grid>
         </Grid>
 
@@ -209,8 +289,7 @@
                                        HeightRequest="60"
                                        WidthRequest="60"
                                        VerticalOptions="Center"
-                                       HorizontalOptions="Center"
-                            />
+                                       HorizontalOptions="Center" />
                             </Frame>
 
                             <!-- Contact Details -->
@@ -265,8 +344,6 @@
                             HeightRequest="40"
                             Clicked="OnBackClicked" />
 
-                   
-
                     <!-- Contact Header -->
                     <Grid BackgroundColor="#00BCD4" Padding="20,5,0,0">
                         <Grid.RowDefinitions>
@@ -291,8 +368,7 @@
                                 HeightRequest="90"
                                 WidthRequest="90"
                                 VerticalOptions="Center"
-                                HorizontalOptions="Center"
-                                />
+                                HorizontalOptions="Center" />
                         </Frame>
 
                         <!-- Contact Name -->
@@ -394,7 +470,7 @@
                                    Padding="0"
                                    HasShadow="True">
                                 <Frame.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnSMSTapped" />
+                                    <TapGestureRecognizer Tapped="OnShareTapped" />
                                 </Frame.GestureRecognizers>
                                 <Label Text="📤" 
                                        FontSize="20" 
@@ -637,53 +713,18 @@
                             </StackLayout>
                         </Grid>
 
-                        <!-- Separator -->
-                        <!--
-                        <BoxView HeightRequest="1" 
-                                 BackgroundColor="#E0E0E0" 
-                                 Margin="0,20,0,20" />
-
-                        -->
-                        <!-- Additional Information Section -->
-                        <!--
-                        <Label Text="Additional Information" 
-                               FontSize="18" 
-                               FontAttributes="Bold" 
-                               TextColor="#00BCD4" 
-                               Margin="0,0,0,15" />
-
-                        -->
-                        <!-- Contact ID -->
-                        <!--
-                        <Grid Margin="0,0,0,15">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-
-                            <Label Grid.Column="0" Text="🆔" FontSize="18" VerticalOptions="Center" />
-                            <StackLayout Grid.Column="1" Margin="15,0,0,0">
-                                <Label x:Name="DetailId" 
-                                       Text="{Binding Id}" 
-                                       FontSize="16" 
-                                       TextColor="Black" />
-                                <Label Text="Contact ID" 
-                                       FontSize="12" 
-                                       TextColor="#666" />
-                            </StackLayout>
-                        </Grid>-->
                         <!-- Pending Approval Message -->
                         <Label x:Name="PendingApprovalMessage"
                                 Text="Pending for Approval from Admin"
                                 FontSize="16"
                                 FontAttributes="Bold"
                                 TextColor="Red"
-                                
                                 Padding="1,0"
                                 Margin="0,5,1,1"
                                 HorizontalOptions="FillAndExpand"
                                 HorizontalTextAlignment="Center"
                                 IsVisible="False" />
+
                         <!-- Edit Button (Centered) -->
                         <Button x:Name="EditContactButton" 
                                 Text="Edit Contact" 
@@ -698,18 +739,6 @@
                                 WidthRequest="200"
                                 IsVisible="False"
                                 Clicked="OnEditContactClicked" />
-
-                        <!--<Button Grid.Column="1" 
-                                Text="Delete Contact" 
-                                BackgroundColor="#F44336" 
-                                TextColor="White" 
-                                FontSize="16"
-                                FontAttributes="Bold"
-                                Margin="10,0,0,0"
-                                HeightRequest="45"
-                                CornerRadius="22"
-                                Clicked="OnDeleteContactClicked" />-->
-
                     </StackLayout>
                 </StackLayout>
             </ScrollView>
@@ -739,7 +768,8 @@
                            IsVisible="False" />
                 </StackLayout>
             </Grid>
-            <!-- Edit Contact Popup Overlay - Add this AFTER your existing ContactDetailView and LoadingOverlay -->
+
+            <!-- Edit Contact Popup Overlay -->
             <Grid x:Name="EditContactOverlay" 
                   BackgroundColor="Black" 
                   Opacity="0.8" 
@@ -753,8 +783,7 @@
                        Padding="0"
                        HasShadow="True"
                        VerticalOptions="Center"
-                       HorizontalOptions="Center"
-                       >
+                       HorizontalOptions="Center">
 
                     <ScrollView>
                         <StackLayout Padding="20" Spacing="15">
@@ -767,50 +796,50 @@
                                 </Grid.ColumnDefinitions>
 
                                 <Label Grid.Column="0" 
-                           Text="Edit Contact" 
-                           FontSize="20" 
-                           FontAttributes="Bold" 
-                           TextColor="#00BCD4" 
-                           VerticalOptions="Center" />
+                                       Text="Edit Contact" 
+                                       FontSize="20" 
+                                       FontAttributes="Bold" 
+                                       TextColor="#00BCD4" 
+                                       VerticalOptions="Center" />
 
                                 <Button Grid.Column="1" 
-                            x:Name="CloseEditPopup"
-                            Text="✕" 
-                            FontSize="18" 
-                            TextColor="#666" 
-                            BackgroundColor="Transparent"
-                            BorderWidth="0"
-                            HeightRequest="30"
-                            WidthRequest="30"
-                            Clicked="OnCloseEditPopupClicked" />
+                                        x:Name="CloseEditPopup"
+                                        Text="✕" 
+                                        FontSize="18" 
+                                        TextColor="#666" 
+                                        BackgroundColor="Transparent"
+                                        BorderWidth="0"
+                                        HeightRequest="30"
+                                        WidthRequest="30"
+                                        Clicked="OnCloseEditPopupClicked" />
                             </Grid>
 
                             <!-- Separator -->
                             <BoxView HeightRequest="1" 
-                         BackgroundColor="#E0E0E0" />
+                                     BackgroundColor="#E0E0E0" />
 
                             <!-- Edit Form Fields -->
 
                             <!-- Name -->
                             <StackLayout>
                                 <Label Text="Name" 
-                           FontSize="14" 
-                           FontAttributes="Bold" 
-                           TextColor="#333" />
+                                       FontSize="14" 
+                                       FontAttributes="Bold" 
+                                       TextColor="#333" />
                                 <Entry x:Name="EditNameEntry"
-                           Placeholder="Enter name" 
-                           BackgroundColor="#F5F5F5"
-                           TextColor="Black"
-                           PlaceholderColor="#666"
-                           HeightRequest="45" />
+                                       Placeholder="Enter name" 
+                                       BackgroundColor="#F5F5F5"
+                                       TextColor="Black"
+                                       PlaceholderColor="#666"
+                                       HeightRequest="45" />
                             </StackLayout>
 
                             <!-- Mobile Numbers -->
                             <StackLayout>
                                 <Label Text="Mobile 1" 
-                           FontSize="14" 
-                           FontAttributes="Bold" 
-                           TextColor="#333" />
+                                       FontSize="14" 
+                                       FontAttributes="Bold" 
+                                       TextColor="#333" />
                                 <Entry x:Name="EditMobile1Entry"
                                        Placeholder="Enter mobile number" 
                                        Keyboard="Telephone"
@@ -823,167 +852,167 @@
 
                             <StackLayout>
                                 <Label Text="Mobile 2" 
-                           FontSize="14" 
-                           FontAttributes="Bold" 
-                           TextColor="#333" />
+                                       FontSize="14" 
+                                       FontAttributes="Bold" 
+                                       TextColor="#333" />
                                 <Entry x:Name="EditMobile2Entry"
-                           Placeholder="Enter mobile number (optional)" 
-                           Keyboard="Telephone"
-                           BackgroundColor="#F5F5F5"
-                           TextColor="Black"
-                           PlaceholderColor="#666"
-                           HeightRequest="45" />
+                                       Placeholder="Enter mobile number (optional)" 
+                                       Keyboard="Telephone"
+                                       BackgroundColor="#F5F5F5"
+                                       TextColor="Black"
+                                       PlaceholderColor="#666"
+                                       HeightRequest="45" />
                             </StackLayout>
 
                             <StackLayout>
                                 <Label Text="Mobile 3" 
-                           FontSize="14" 
-                           FontAttributes="Bold" 
-                           TextColor="#333" />
+                                       FontSize="14" 
+                                       FontAttributes="Bold" 
+                                       TextColor="#333" />
                                 <Entry x:Name="EditMobile3Entry"
-                           Placeholder="Enter mobile number (optional)" 
-                           Keyboard="Telephone"
-                           BackgroundColor="#F5F5F5"
-                           TextColor="Black"
-                           PlaceholderColor="#666"
-                           HeightRequest="45" />
+                                       Placeholder="Enter mobile number (optional)" 
+                                       Keyboard="Telephone"
+                                       BackgroundColor="#F5F5F5"
+                                       TextColor="Black"
+                                       PlaceholderColor="#666"
+                                       HeightRequest="45" />
                             </StackLayout>
 
                             <!-- Telephone -->
                             <StackLayout>
                                 <Label Text="Telephone" 
-                           FontSize="14" 
-                           FontAttributes="Bold" 
-                           TextColor="#333" />
+                                       FontSize="14" 
+                                       FontAttributes="Bold" 
+                                       TextColor="#333" />
                                 <Entry x:Name="EditTelephoneEntry"
-                           Placeholder="Enter telephone number (optional)" 
-                           Keyboard="Telephone"
-                           BackgroundColor="#F5F5F5"
-                           TextColor="Black"
-                           PlaceholderColor="#666"
-                           HeightRequest="45" />
+                                       Placeholder="Enter telephone number (optional)" 
+                                       Keyboard="Telephone"
+                                       BackgroundColor="#F5F5F5"
+                                       TextColor="Black"
+                                       PlaceholderColor="#666"
+                                       HeightRequest="45" />
                             </StackLayout>
 
                             <!-- Email Addresses -->
                             <StackLayout>
                                 <Label Text="Email 1" 
-                           FontSize="14" 
-                           FontAttributes="Bold" 
-                           TextColor="#333" />
+                                       FontSize="14" 
+                                       FontAttributes="Bold" 
+                                       TextColor="#333" />
                                 <Entry x:Name="EditEmail1Entry"
-                           Placeholder="Enter email address" 
-                           Keyboard="Email"
-                          IsReadOnly="True"
-                           BackgroundColor="#F5F5F5"
-                           TextColor="Black"
-                           PlaceholderColor="#666"
-                           HeightRequest="45" />
+                                       Placeholder="Enter email address" 
+                                       Keyboard="Email"
+                                       IsReadOnly="True"
+                                       BackgroundColor="#F5F5F5"
+                                       TextColor="Black"
+                                       PlaceholderColor="#666"
+                                       HeightRequest="45" />
                             </StackLayout>
 
                             <StackLayout>
                                 <Label Text="Email 2" 
-                           FontSize="14" 
-                           FontAttributes="Bold" 
-                           TextColor="#333" />
+                                       FontSize="14" 
+                                       FontAttributes="Bold" 
+                                       TextColor="#333" />
                                 <Entry x:Name="EditEmail2Entry"
-                           Placeholder="Enter email address (optional)" 
-                           Keyboard="Email"
-                           BackgroundColor="#F5F5F5"
-                           TextColor="Black"
-                           PlaceholderColor="#666"
-                           HeightRequest="45" />
+                                       Placeholder="Enter email address (optional)" 
+                                       Keyboard="Email"
+                                       BackgroundColor="#F5F5F5"
+                                       TextColor="Black"
+                                       PlaceholderColor="#666"
+                                       HeightRequest="45" />
                             </StackLayout>
 
                             <StackLayout>
                                 <Label Text="Email 3" 
-                           FontSize="14" 
-                           FontAttributes="Bold" 
-                           TextColor="#333" />
+                                       FontSize="14" 
+                                       FontAttributes="Bold" 
+                                       TextColor="#333" />
                                 <Entry x:Name="EditEmail3Entry"
-                           Placeholder="Enter email address (optional)" 
-                           Keyboard="Email"
-                           BackgroundColor="#F5F5F5"
-                           TextColor="Black"
-                           PlaceholderColor="#666"
-                           HeightRequest="45" />
+                                       Placeholder="Enter email address (optional)" 
+                                       Keyboard="Email"
+                                       BackgroundColor="#F5F5F5"
+                                       TextColor="Black"
+                                       PlaceholderColor="#666"
+                                       HeightRequest="45" />
                             </StackLayout>
 
                             <!-- City -->
                             <StackLayout>
                                 <Label Text="City" 
-                           FontSize="14" 
-                           FontAttributes="Bold" 
-                           TextColor="#333" />
+                                       FontSize="14" 
+                                       FontAttributes="Bold" 
+                                       TextColor="#333" />
                                 <Entry x:Name="EditCityEntry"
-                           Placeholder="Enter city name" 
-                           BackgroundColor="#F5F5F5"
-                           TextColor="Black"
-                           PlaceholderColor="#666"
-                           HeightRequest="45" />
+                                       Placeholder="Enter city name" 
+                                       BackgroundColor="#F5F5F5"
+                                       TextColor="Black"
+                                       PlaceholderColor="#666"
+                                       HeightRequest="45" />
                             </StackLayout>
 
                             <!-- Address -->
                             <StackLayout>
                                 <Label Text="Address" 
-                           FontSize="14" 
-                           FontAttributes="Bold" 
-                           TextColor="#333" />
+                                       FontSize="14" 
+                                       FontAttributes="Bold" 
+                                       TextColor="#333" />
                                 <Entry x:Name="EditAddressEditor"
-                            Placeholder="Enter full address" 
-                            BackgroundColor="#F5F5F5"
-                            TextColor="Black"
-                            PlaceholderColor="#666"
-                            HeightRequest="45" />
+                                       Placeholder="Enter full address" 
+                                       BackgroundColor="#F5F5F5"
+                                       TextColor="Black"
+                                       PlaceholderColor="#666"
+                                       HeightRequest="45" />
                             </StackLayout>
 
                             <!-- Company -->
                             <StackLayout>
                                 <Label Text="Company" 
-                           FontSize="14" 
-                           FontAttributes="Bold" 
-                           TextColor="#333" />
+                                       FontSize="14" 
+                                       FontAttributes="Bold" 
+                                       TextColor="#333" />
                                 <Entry x:Name="EditCompanyEntry"
-                           Placeholder="Enter company name" 
-                           BackgroundColor="#F5F5F5"
-                           TextColor="Black"
-                           PlaceholderColor="#666"
-                           HeightRequest="45" />
+                                       Placeholder="Enter company name" 
+                                       BackgroundColor="#F5F5F5"
+                                       TextColor="Black"
+                                       PlaceholderColor="#666"
+                                       HeightRequest="45" />
                             </StackLayout>
 
                             <!-- Company City -->
                             <StackLayout>
                                 <Label Text="Company City" 
-                           FontSize="14" 
-                           FontAttributes="Bold" 
-                           TextColor="#333" />
+                                       FontSize="14" 
+                                       FontAttributes="Bold" 
+                                       TextColor="#333" />
                                 <Entry x:Name="EditCompanyCityEntry"
-                           Placeholder="Enter company city (optional)" 
-                           BackgroundColor="#F5F5F5"
-                           TextColor="Black"
-                           PlaceholderColor="#666"
-                           HeightRequest="45" />
+                                       Placeholder="Enter company city (optional)" 
+                                       BackgroundColor="#F5F5F5"
+                                       TextColor="Black"
+                                       PlaceholderColor="#666"
+                                       HeightRequest="45" />
                             </StackLayout>
 
                             <!-- Company Address -->
                             <StackLayout>
                                 <Label Text="Company Address" 
-                           FontSize="14" 
-                           FontAttributes="Bold" 
-                           TextColor="#333" />
+                                       FontSize="14" 
+                                       FontAttributes="Bold" 
+                                       TextColor="#333" />
                                 <Entry x:Name="EditCompanyAddressEditor"
-                            Placeholder="Enter company address (optional)" 
-                            BackgroundColor="#F5F5F5"
-                            TextColor="Black"
-                            PlaceholderColor="#666"
-                            HeightRequest="45" />
+                                       Placeholder="Enter company address (optional)" 
+                                       BackgroundColor="#F5F5F5"
+                                       TextColor="Black"
+                                       PlaceholderColor="#666"
+                                       HeightRequest="45" />
                             </StackLayout>
 
                             <!-- Category -->
                             <StackLayout>
                                 <Label Text="Category" 
-                           FontSize="14" 
-                           FontAttributes="Bold" 
-                           TextColor="#333" />
+                                       FontSize="14" 
+                                       FontAttributes="Bold" 
+                                       TextColor="#333" />
 
                                 <Picker x:Name="EditCategoryPicker"
                                         Title="Select Category"
@@ -1003,84 +1032,31 @@
                                 </Grid.ColumnDefinitions>
 
                                 <Button Grid.Column="0" 
-                            Text="Cancel" 
-                            BackgroundColor="#95A5A6" 
-                            TextColor="White" 
-                            FontSize="16"
-                            FontAttributes="Bold"
-                            Margin="0,0,10,0"
-                            HeightRequest="45"
-                            CornerRadius="22"
-                            Clicked="OnCancelEditClicked" />
+                                        Text="Cancel" 
+                                        BackgroundColor="#95A5A6" 
+                                        TextColor="White" 
+                                        FontSize="16"
+                                        FontAttributes="Bold"
+                                        Margin="0,0,10,0"
+                                        HeightRequest="45"
+                                        CornerRadius="22"
+                                        Clicked="OnCancelEditClicked" />
 
                                 <Button Grid.Column="1" 
-                            Text="Save Changes" 
-                            BackgroundColor="#00BCD4" 
-                            TextColor="White" 
-                            FontSize="16"
-                            FontAttributes="Bold"
-                            Margin="10,0,0,0"
-                            HeightRequest="45"
-                            CornerRadius="22"
-                            Clicked="OnSaveEditClicked" />
+                                        Text="Save Changes" 
+                                        BackgroundColor="#00BCD4" 
+                                        TextColor="White" 
+                                        FontSize="16"
+                                        FontAttributes="Bold"
+                                        Margin="10,0,0,0"
+                                        HeightRequest="45"
+                                        CornerRadius="22"
+                                        Clicked="OnSaveEditClicked" />
                             </Grid>
-
                         </StackLayout>
                     </ScrollView>
                 </Frame>
             </Grid>
-            <!-- Floating Action Buttons (Hidden when detail view is shown) -->
-            <!--<Grid x:Name="FloatingButtons" VerticalOptions="End" HorizontalOptions="End" Margin="20,0,20,100">
-                <StackLayout Spacing="15">
-                    -->
-            <!-- WhatsApp Button -->
-            <!--
-                    <Frame BackgroundColor="#25D366" 
-                           HeightRequest="56" 
-                           WidthRequest="56" 
-                           CornerRadius="28" 
-                           Padding="0"
-                           HasShadow="True">
-                        <Label Text="📱" 
-                               FontSize="24" 
-                               TextColor="White" 
-                               VerticalOptions="Center" 
-                               HorizontalOptions="Center" />
-                    </Frame>
-
-                    -->
-            <!-- Menu Button -->
-            <!--
-                    <Frame BackgroundColor="#00BCD4" 
-                           HeightRequest="56" 
-                           WidthRequest="56" 
-                           CornerRadius="28" 
-                           Padding="0"
-                           HasShadow="True">
-                        <Label Text="☰" 
-                               FontSize="24" 
-                               TextColor="White" 
-                               VerticalOptions="Center" 
-                               HorizontalOptions="Center" />
-                    </Frame>
-
-                    -->
-            <!-- Add Button -->
-            <!--
-                    <Frame BackgroundColor="#00BCD4" 
-                           HeightRequest="56"    
-                           WidthRequest="56" 
-                           CornerRadius="28" 
-                           Padding="0"
-                           HasShadow="True">
-                        <Label Text="+" 
-                               FontSize="32" 
-                               TextColor="White" 
-                               VerticalOptions="Center" 
-                               HorizontalOptions="Center" />
-                    </Frame>
-                </StackLayout>
-            </Grid>-->
         </Grid>
     </Grid>
 </ContentPage>

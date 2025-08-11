@@ -543,7 +543,7 @@ namespace BVGF.Connection
                 else
                 {
                     response.Result = VerificationResult.NumberNotFound;
-                    response.Message = $"Phone number {cleanInput} not found in any SIM card";
+                    response.Message = $"Phone number {cleanInput} not found in your device...";
                     response.RequiresAlternativeVerification = true;
                 }
             }
