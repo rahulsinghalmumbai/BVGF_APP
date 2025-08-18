@@ -19,10 +19,10 @@
                 SemanticProperties.HeadingLevel="Level1" />
 
             <Label
-                Text="Welcome to BVGF"
+                Text="Welcome to ReachConnect"
                 Style="{StaticResource SubHeadline}"
                 SemanticProperties.HeadingLevel="Level2"
-                SemanticProperties.Description="Welcome to BVGF" />
+                SemanticProperties.Description="Welcome to ReachConnect" />
 
            
         </VerticalStackLayout>
