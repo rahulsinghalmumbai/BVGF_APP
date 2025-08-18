@@ -21,11 +21,11 @@
 		<Nullable>enable</Nullable>
 
 		<!-- Display name -->
-		<ApplicationTitle>BVGF</ApplicationTitle>
+		<ApplicationTitle>ReachConnect</ApplicationTitle>
 
 		<!-- App Identifier -->
-		<ApplicationId>BVGF</ApplicationId>
-
+		<ApplicationId>ReachConnect</ApplicationId>
+		<AssemblyName>ReachConnect</AssemblyName>
 		<!-- Versions -->
 		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
 		<ApplicationVersion>1</ApplicationVersion>
@@ -97,5 +97,13 @@
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	</ItemGroup>
-
+	
+	<!-- 🔐 SIGNING SETUP FOR RELEASE APK/AAB -->
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<AndroidKeyStore>true</AndroidKeyStore>
+		<AndroidSigningKeyStore>key.keystore</AndroidSigningKeyStore>
+		<AndroidSigningKeyAlias>ReachConnect</AndroidSigningKeyAlias>
+		<AndroidSigningKeyPass>raz#9540</AndroidSigningKeyPass>
+		<AndroidSigningStorePass>raz#9540</AndroidSigningStorePass>
+	</PropertyGroup>
 </Project>
