@@ -609,6 +609,7 @@ public partial class homePage : ContentPage
         return phoneNumber;
     }
 
+    //whatsapp start
     private async void OnWhatsAppTapped(object sender, EventArgs e)
     {
         try
@@ -620,36 +621,161 @@ public partial class homePage : ContentPage
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(contact.Mobile1))
+            var availableMobiles = new List<(string Label, string Number, string FormattedNumber)>();
+
+            if (!string.IsNullOrWhiteSpace(contact.Mobile1))
+                availableMobiles.Add(("Mobile 1", contact.Mobile1, FormatForDisplay(contact.Mobile1)));
+            if (!string.IsNullOrWhiteSpace(contact.Mobile2))
+                availableMobiles.Add(("Mobile 2", contact.Mobile2, FormatForDisplay(contact.Mobile2)));
+            if (!string.IsNullOrWhiteSpace(contact.Mobile3))
+                availableMobiles.Add(("Mobile 3", contact.Mobile3, FormatForDisplay(contact.Mobile3)));
+
+            if (availableMobiles.Count == 0)
             {
                 await DisplayAlert("Error", "No mobile number available for this contact", "OK");
                 return;
             }
 
-            var phoneNumber = FormatPhoneNumberForWhatsApp(contact.Mobile1);
-            if (string.IsNullOrWhiteSpace(phoneNumber))
+            string selectedNumber;
+
+            if (availableMobiles.Count == 1)
             {
-                await DisplayAlert("Error", "Invalid phone number format", "OK");
+                selectedNumber = availableMobiles[0].Number;
+            }
+            else
+            {
+                var buttons = new Dictionary<string, string>();
+                foreach (var m in availableMobiles)
+                {
+                    buttons.Add($"{m.Label} : {m.FormattedNumber}", m.Number);
+                }
+
+                var action = await DisplayActionSheet("Choose number for WhatsApp:", "Cancel", null, buttons.Keys.ToArray());
+                if (string.IsNullOrWhiteSpace(action) || action == "Cancel") return;
+
+                if (!buttons.TryGetValue(action, out selectedNumber))
+                    return;
+            }
+
+            var isAvailable = await CheckWhatsAppAvailability(selectedNumber);
+            if (!isAvailable)
+            {
+                await DisplayAlert("Info", $"WhatsApp not available on number {FormatForDisplay(selectedNumber)}", "OK");
                 return;
             }
 
-            await OpenWhatsAppViaLauncher(contact, phoneNumber);
+            var formattedNumber = FormatPhoneNumberForWhatsApp(selectedNumber);
+            await TryOpenWhatsApp(contact, formattedNumber);
         }
         catch (Exception ex)
         {
-            try
+            await DisplayAlert("Error", "Could not open WhatsApp: " + ex.Message, "OK");
+        }
+    }
+
+    private async Task<bool> CheckWhatsAppAvailability(string phoneNumber)
+    {
+        try
+        {
+            var cleanNumber = phoneNumber.Replace("+", "");
+
+            var testSchemes = new List<string>();
+
+            if (DeviceInfo.Platform == DevicePlatform.Android)
             {
-                var contact = ContactDetailView.BindingContext as MstMember;
-                if (contact != null)
+                testSchemes.Add($"https://wa.me/{cleanNumber}");
+                testSchemes.Add($"whatsapp://send?phone={cleanNumber}");
+            }
+            else if (DeviceInfo.Platform == DevicePlatform.iOS)
+            {
+                testSchemes.Add($"https://wa.me/{cleanNumber}");
+                testSchemes.Add($"whatsapp://send?phone={cleanNumber}");
+            }
+            else
+            {
+                testSchemes.Add($"https://wa.me/{cleanNumber}");
+            }
+
+            foreach (var scheme in testSchemes)
+            {
+                try
                 {
-                    await Clipboard.Default.SetTextAsync(GenerateWhatsAppMessage(contact));
-                    await DisplayAlert("Info", "WhatsApp not available. Contact details copied to clipboard.", "OK");
+                    var canOpen = await Launcher.CanOpenAsync(scheme);
+                    if (canOpen)
+                    {
+                        return true;
+                    }
+                }
+                catch
+                {
+                    continue; 
                 }
             }
-            catch
+
+            
+            return false;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+    private async Task<bool> TryOpenWhatsApp(MstMember contact, string phoneNumber)
+    {
+        try
+        {
+            var message = GenerateShortWhatsAppMessage(contact);
+            var encodedMessage = System.Web.HttpUtility.UrlEncode(message);
+
+            if (encodedMessage.Length > 400)
             {
-                await DisplayAlert("Error", "Could not open WhatsApp. Please try again.", "OK");
+                message = $"*{contact.Name}*\n📱 {phoneNumber}\n\n📲 BT Address Book";
+                encodedMessage = System.Web.HttpUtility.UrlEncode(message);
             }
+
+            var cleanNumber = phoneNumber.Replace("+", "");
+
+            var schemes = new List<string>();
+
+            if (DeviceInfo.Platform == DevicePlatform.Android)
+            {
+                schemes.Add($"https://wa.me/{cleanNumber}?text={encodedMessage}");
+                schemes.Add($"whatsapp://send?phone={cleanNumber}&text={encodedMessage}");
+                schemes.Add($"https://api.whatsapp.com/send?phone={cleanNumber}&text={encodedMessage}");
+            }
+            else if (DeviceInfo.Platform == DevicePlatform.iOS)
+            {
+                schemes.Add($"https://wa.me/{cleanNumber}?text={encodedMessage}");
+                schemes.Add($"whatsapp://send?phone={cleanNumber}&text={encodedMessage}");
+            }
+            else
+            {
+                schemes.Add($"https://wa.me/{cleanNumber}?text={encodedMessage}");
+            }
+
+            foreach (var scheme in schemes)
+            {
+                try
+                {
+                    var canOpen = await Launcher.CanOpenAsync(scheme);
+                    if (canOpen)
+                    {
+                        await Task.Delay(100); 
+                        await Launcher.OpenAsync(scheme);
+                        return true; 
+                    }
+                }
+                catch
+                {
+                    continue; 
+                }
+            }
+
+            return false;
+        }
+        catch
+        {
+            return false;
         }
     }
     private string FormatPhoneNumberForWhatsApp(string rawNumber)
@@ -703,14 +829,15 @@ public partial class homePage : ContentPage
     }
     private string GenerateShortWhatsAppMessage(MstMember contact)
     {
-        var message = $"*{contact.Name}*\n";
-        message += $"📱 {contact.Mobile1}\n";
+        var message = $"*Contact Details*\n\n";
+        message += $"📝 *Name:* {contact.Name}\n";
+        message += $"📱 *Mobile:* {contact.Mobile1}\n";
 
         if (!string.IsNullOrEmpty(contact.Company))
-            message += $"🏢 {contact.Company}\n";
+            message += $"🏢 *Company:* {contact.Company}\n";
 
         if (!string.IsNullOrEmpty(contact.City))
-            message += $"📍 {contact.City}\n";
+            message += $"📍 *City:* {contact.City}\n";
 
         message += "\n📲 BT Address Book";
 
@@ -892,6 +1019,9 @@ public partial class homePage : ContentPage
         await OpenWhatsAppViaLauncher(contact, formattedNumber);
     }
 
+
+
+    //whatsapp end
     private async void OnShareTapped(object sender, EventArgs e)
     {
         try
