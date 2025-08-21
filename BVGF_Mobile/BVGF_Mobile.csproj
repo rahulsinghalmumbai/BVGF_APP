@@ -26,10 +26,7 @@
 		<!-- App Identifier -->
 		<ApplicationId>ReachConnect</ApplicationId>
 		<AssemblyName>ReachConnect</AssemblyName>
-		<!-- Versions -->
-		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
-		<ApplicationVersion>1</ApplicationVersion>
-
+		
 		<!-- To develop, package, and publish an app to the Microsoft Store, see: https://aka.ms/MauiTemplateUnpackaged -->
 		<WindowsPackageType>None</WindowsPackageType>
 
@@ -100,10 +97,18 @@
 	
 	<!-- 🔐 SIGNING SETUP FOR RELEASE APK/AAB -->
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+
+		<!-- Versions -->
+		<ApplicationVersion>3</ApplicationVersion>
+		<VersionCode>3</VersionCode>
+		<ApplicationDisplayVersion>1.0.3</ApplicationDisplayVersion>
+
 		<AndroidKeyStore>true</AndroidKeyStore>
 		<AndroidSigningKeyStore>key.keystore</AndroidSigningKeyStore>
 		<AndroidSigningKeyAlias>ReachConnect</AndroidSigningKeyAlias>
 		<AndroidSigningKeyPass>raz#9540</AndroidSigningKeyPass>
 		<AndroidSigningStorePass>raz#9540</AndroidSigningStorePass>
+
+
 	</PropertyGroup>
 </Project>
