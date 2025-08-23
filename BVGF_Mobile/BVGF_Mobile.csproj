@@ -99,9 +99,9 @@
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
 
 		<!-- Versions -->
-		<ApplicationVersion>3</ApplicationVersion>
-		<VersionCode>3</VersionCode>
-		<ApplicationDisplayVersion>1.0.3</ApplicationDisplayVersion>
+		<ApplicationVersion>4</ApplicationVersion>
+		<VersionCode>4</VersionCode>
+		<ApplicationDisplayVersion>1.0.4</ApplicationDisplayVersion>
 
 		<AndroidKeyStore>true</AndroidKeyStore>
 		<AndroidSigningKeyStore>key.keystore</AndroidSigningKeyStore>
